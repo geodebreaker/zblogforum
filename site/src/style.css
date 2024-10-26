@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: monospace;
+  font-size: 20px;
+}
+
+#header {
+  background: blue;
+  font-size: 30px;
+  padding: 5px;
+  height: 40px;
+  user-select: none;
+}
+
+#content {
+  padding: 10px;
+}
+
+#h-title {
+  cursor: pointer;
+}
+
+#ht-icon {
+  width: 40px;
+  height: 40px;
+  vertical-align: middle;
+}
+
+#h-opt {
+  float: right;
+  cursor: pointer;
+}
