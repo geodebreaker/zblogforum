@@ -71,7 +71,7 @@ function api(res, url, params) {
   };
   switch (url) {
     case 'content':
-      if(!params.q)
+      if (!params.q)
         return ret();
       ret(content(params.q))
       break;
@@ -83,13 +83,17 @@ function api(res, url, params) {
 
 function content(ourl) {
   var url = ourl.split('/');
-  url.shift();
+  if (url.length > 1) url.shift();
   var type = url.shift() ?? '';
   url = url.join('/');
   switch (type) {
     case '':
-      return {type: 'html', title: 'ZBlogForums', html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>`};
+      return { type: 'html', title: 'ZBlogForums', html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>` };
     default:
-      return {type: 'html', title: 'Page not found', html: '404 Not Found'};
+      return { type: 'html', title: 'Page not found', html: '404 Not Found' };
   }
+}
+
+function createId(y, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {
+  return y + ':' + new Array(8).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
 }

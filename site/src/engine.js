@@ -22,19 +22,22 @@ async function go(loc, stat) {
     if (c.fail)
       return err('Failed to fetch page content. Please reload.',
         (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
-    history.replaceState({ ttl: Date.now(), stat: c }, '', loc);
+    history.replaceState({ ttl: Date.now(), stat: c }, '', location.pathname);
   } else {
     c = stat.stat;
   }
-  $('#content').innerHTML = c.html +
-    module('postslot', {
-      site: '/h',
-      name: 'pp',
-      user: module('userlink', {
-        user: 'geodebreaker'
-      })
-    })
   $('title').innerText = c.title;
+  switch (c.type) {
+    case 'html':
+      $('#content').innerHTML = c.html;
+      break;
+    case 'home':
+      mkp_home(c)
+      break;
+    default:
+      err('Unknown page type.');
+      break;
+  }
 }
 
 function err(...e) {
@@ -54,6 +57,19 @@ function module(name, inputs, nhtml) {
   } else {
     return h;
   }
+}
+
+function mkp_home(x) {
+
+  x.posts.map(y => {
+    module('postslot', {
+      site: '/@' + y.user + '/' + y.id,
+      name: y.name,
+      user: module('userlink', {
+        user: y.user
+      })
+    })
+  })
 }
 
 init();
