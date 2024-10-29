@@ -81,8 +81,9 @@ function api(res, url, params) {
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
       if(!post)
         return ret();
-      post.replies.push({ id: createId('r'), user: createId('u'), data: params.d });
-      ret({ id: createId('r'), user: createId('u'), data: params.d });
+      var newpost = { id: createId('r'), user: createId('u'), data: params.d };
+      post.replies.push(newpost);
+      ret(newpost);
       break;
     default:
       ret();
@@ -105,9 +106,8 @@ function content(ourl) {
   url = url.join('/');
   switch (type) {
     case '':
-      // return { type: 'html', title: 'ZBlogForums', 
-      //   html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>` };
-      return { type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })) };
+      return { type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })), 
+        items: { "rules": "/rules" } };
     case 'user':
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name }));
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
@@ -116,9 +116,9 @@ function content(ourl) {
       if (post)
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       else
-        return { type: 'html', title: 'Post not found', html: 'Post not found' };
+        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
     default:
-      return { type: 'html', title: 'Page not found', html: '404 Not Found' };
+      return { type: 'html', title: 'Page not found', html: '404 Not Found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
   }
 }
 

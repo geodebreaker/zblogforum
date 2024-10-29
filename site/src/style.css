@@ -1,3 +1,8 @@
+@font-face {
+  font-family: "icon";
+  src: url("/src/ZBFicon.ttf");
+}
+
 body {
   margin: 0;
   background: black;
@@ -10,6 +15,11 @@ body {
   /* grid-template-areas: "h h" "c m"; */
   grid-template-areas: "h h" "c c";
   height: 100vh;
+}
+
+.right {
+  float: right;
+  width: 50%;
 }
 
 h3 { margin: 5px 0 }
@@ -98,9 +108,14 @@ h3 { margin: 5px 0 }
   vertical-align: middle;
 }
 
-#h-opt {
+#h-opts {
   float: right;
+  vertical-align: middle;
   cursor: pointer;
+}
+
+.h-opt {
+  font-family: icon;
 }
 
 .postslot {
@@ -108,7 +123,7 @@ h3 { margin: 5px 0 }
   font-size: 25px;
   border: 2px solid gray;
   width: 400px;
-  min-height: 50px;
+  min-height: 30px;
   text-wrap: wrap;
   padding: 5px;
   background: #222;
