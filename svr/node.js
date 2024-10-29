@@ -71,9 +71,18 @@ function api(res, url, params) {
   };
   switch (url) {
     case 'content':
-      if (!params.q)
+      if (params.q == undefined)
         return ret();
       ret(content(params.q))
+      break;
+    case 'reply':
+      if (!params.p || !params.d)
+        return ret();
+      var post = POSTS.find(x => params.p == x.user + '/' + x.id);
+      if(!post)
+        return ret();
+      post.replies.push({ id: createId('r'), user: createId('u'), data: params.d });
+      ret({ id: createId('r'), user: createId('u'), data: params.d });
       break;
     default:
       ret();
@@ -85,15 +94,44 @@ function content(ourl) {
   var url = ourl.split('/');
   if (url.length > 1) url.shift();
   var type = url.shift() ?? '';
+  var user = null;
+  if (type.startsWith('@')) {
+    user = type.replace('@', '');
+    if (url.length == 0)
+      type = 'user';
+    else
+      type = 'post';
+  }
   url = url.join('/');
   switch (type) {
     case '':
-      return { type: 'html', title: 'ZBlogForums', html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>` };
+      // return { type: 'html', title: 'ZBlogForums', 
+      //   html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>` };
+      return { type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })) };
+    case 'user':
+      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name }));
+      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
+    case 'post':
+      var post = POSTS.find(x => x.id == url && x.user == user);
+      if (post)
+        return { type: 'post', post, title: post.name + ' - ZBlogForums' };
+      else
+        return { type: 'html', title: 'Post not found', html: 'Post not found' };
     default:
       return { type: 'html', title: 'Page not found', html: '404 Not Found' };
   }
 }
 
-function createId(y, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {
-  return y + ':' + new Array(8).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
+const POSTS = [
+  { user: createId('u'), id: createId('p'), name: 'help oh god the darkness is coming (1)', data: 'g', replies: [] },
+  {
+    user: createId('u'), id: createId('p'), name: 'patooie', data: 'patooie', replies: [{
+      id: createId('r'), user: createId('u'), data: 'patooie',
+    }]
+  },
+  { user: createId('u'), id: createId('p'), name: 'ralseri', data: 'why.', replies: [] },
+];
+
+function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {
+  return y + ':' + new Array(l).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
 }
