@@ -15,7 +15,11 @@
       ZBlogForums
     </span>
     <span id="h-opt">
-      C F N U S
+      <span class="h-opt">C</span>
+      <span class="h-opt">F</span>
+      <span class="h-opt">N</span>
+      <span class="h-opt">S</span>
+      <span class="h-opt">U</span>
     </span>
   </div>
   <div id="content">
@@ -29,10 +33,14 @@
     </div>
     <div id="m-content">Loading...</div>
   </div>
-  <div class="mod postslot">
-    <span class="insert i-name">Name</span>
-    <span class="insert i-user">@User</span>
+
+  <div class="mod postslot" onclick="if(event.target.tagName!='A')go('%site%')">
+    %name%<br>
+    %user%
   </div>
+  <a class="mod userlink" href="/@%user%">
+    @%user%
+  </a>
 </body>
 
 </html>

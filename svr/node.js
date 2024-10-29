@@ -73,7 +73,7 @@ function api(res, url, params) {
     case 'content':
       if(!params.q)
         return ret();
-      ret(content(params.q));
+      ret(content(params.q))
       break;
     default:
       ret();
