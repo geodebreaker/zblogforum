@@ -1,8 +1,8 @@
-$ = x => document.querySelector(x);
+$ = (x, y = document) => y.querySelector(x);
 
 function init() {
   window.onpopstate = (e) => new Promise(y => y(go(null, e.state)));
-  go()
+  go();
 }
 
 async function go(loc, stat) {
