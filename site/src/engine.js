@@ -9,6 +9,15 @@ function init() {
       go(e.target.getAttribute('href'));
     }
   });
+  $('#h-opts').onclick = e => {
+    if (e.target.classList.contains('h-opt')) {
+      switch (e.target.innerText) {
+        case 'R':
+          go();
+          break;
+      }
+    }
+  };
   go();
 }
 
@@ -32,6 +41,9 @@ async function go(loc, stat) {
       break;
     case 'post':
       mkp_post(c.post);
+      break;
+    case 'user':
+      mkp_user(c)
       break;
     default:
       err('Unknown page type.');
@@ -59,6 +71,8 @@ function module(name, inputs, nhtml) {
 }
 
 function mkp_home(x) {
+  $('#content').innerHTML = `<div class="right"><h3>ZBlogForums</h3>by evrtdg<hr>${Object.entries(x.items).map(x =>
+    '<a href="' + x[1] + '">' + x[0] + '</a>').join('<br>')}</div>`;
   x.posts.map(y => {
     $('#content').append(
       module('postslot', {
@@ -67,6 +81,19 @@ function mkp_home(x) {
         user: module('userlink', {
           user: y.user
         })
+      }, true)
+    );
+  })
+}
+
+function mkp_user(x) {
+  $('#content').innerHTML = `<h3>@${x.user}</h3><hr>`;
+  x.posts.map(y => {
+    $('#content').append(
+      module('postslot', {
+        site: '/@' + y.user + '/' + y.id,
+        name: escapeHTML(y.name),
+        user: ''
       }, true)
     );
   })
@@ -111,4 +138,4 @@ async function net(url, dat) {
   return c;
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
