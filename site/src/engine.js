@@ -6,7 +6,7 @@ function init() {
   window.addEventListener('click', e => {
     if (e.target.tagName == 'A') {
       e.preventDefault();
-      go(e.target.href);
+      go(e.target.getAttribute('href'));
     }
   });
   go();
@@ -16,16 +16,12 @@ async function go(loc, stat) {
   if (loc && !stat)
     history.pushState({}, '', loc);
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
-    var c = await fetch('/api/content?q=' + encodeURI(loc ?? location.pathname)).then(
-      r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
-      e => ({ fail: 'Error occured: ' + e }));
-    if (c.fail)
-      return err('Failed to fetch page content. Please reload.',
-        (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
+    var c = await net('content', { q: loc ?? location.pathname });
     history.replaceState({ ttl: Date.now(), stat: c }, '', location.pathname);
   } else {
     c = stat.stat;
   }
+  $('#content').innerHTML = "";
   $('title').innerText = c.title;
   switch (c.type) {
     case 'html':
@@ -33,6 +29,9 @@ async function go(loc, stat) {
       break;
     case 'home':
       mkp_home(c)
+      break;
+    case 'post':
+      mkp_post(c.post);
       break;
     default:
       err('Unknown page type.');
@@ -60,16 +59,56 @@ function module(name, inputs, nhtml) {
 }
 
 function mkp_home(x) {
-
   x.posts.map(y => {
-    module('postslot', {
-      site: '/@' + y.user + '/' + y.id,
-      name: y.name,
-      user: module('userlink', {
-        user: y.user
-      })
-    })
+    $('#content').append(
+      module('postslot', {
+        site: '/@' + y.user + '/' + y.id,
+        name: escapeHTML(y.name),
+        user: module('userlink', {
+          user: y.user
+        })
+      }, true)
+    );
   })
+}
+
+function mkp_post(post) {
+  $('#content').innerHTML = `
+    ${module('userlink', { user: post.user })}
+    <h3>${escapeHTML(post.name)}</h3>
+    <div>${escapeHTML(post.data)}</div>
+    <hr>
+    <div id="addrepl" onclick="reply('${post.user}/${post.id}')">Add Reply</div>`;
+  post.replies.map(r => mkrepl(r));
+}
+
+function reply(pid) {
+  var x = prompt('AAAAAHHH');
+  if (x)
+    net('reply', { p: pid, d: x }).then(x => mkrepl(x));
+}
+
+function escapeHTML(html) {
+  var x = document.createElement('span');
+  x.innerText = html;
+  return x.innerText;
+}
+
+function mkrepl(r) {
+  $('#content').innerHTML += `
+    <hr>
+    ${module('userlink', { user: r.user })}
+    <div>${escapeHTML(r.data)}</div>`;
+}
+
+async function net(url, dat) {
+  var c = await fetch('/api/' + url + '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&')).then(
+    r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
+    e => ({ fail: 'Error occured: ' + e }));
+  if (c.fail)
+    return err('Failed to fetch page content. Please reload.',
+      (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
+  return c;
 }
 
 init();

@@ -7,9 +7,12 @@ body {
   display: grid;
   grid-template-rows: 50px calc(100% - 50px);
   grid-template-columns: 60% 40%;
-  grid-template-areas: "h h" "c m";
+  /* grid-template-areas: "h h" "c m"; */
+  grid-template-areas: "h h" "c c";
   height: 100vh;
 }
+
+h3 { margin: 5px 0 }
 
 .mod {
   display: none !important;
@@ -31,6 +34,10 @@ body {
 }
 
 #menu {
+  display: none;
+  /*
+    -----------------------
+  */
   grid-area: m;
   border-top: 2px solid gray;
   border-left: 2px solid gray;
@@ -97,13 +104,16 @@ body {
 }
 
 .postslot {
-  display: inline-block;
-  font-size: 30px;
+  display: block;
+  font-size: 25px;
   border: 2px solid gray;
-  min-width: 200px;
+  width: 400px;
   min-height: 50px;
-  background-image: linear-gradient(to bottom, #aae, #66a);
-  color: black;
+  text-wrap: wrap;
+  padding: 5px;
+  background: #222;
+  /*background-image: linear-gradient(to bottom, #aae, #66a);*/
+  color: white;
   text-decoration: none;
   font-weight: bold;
   user-select: none;
@@ -111,9 +121,15 @@ body {
 }
 
 .userlink {
-  font-size: 15px;
+  font-size: 20px;
   color: blue;
   text-decoration: underline;
   user-select: none;
+  cursor: pointer;
+}
+
+#addrepl {
+  font-weight: bold;
+  font-size: 25px;
   cursor: pointer;
 }
