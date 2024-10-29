@@ -20,6 +20,7 @@ async function go(loc, stat) {
     c = stat.stat;
   }
   $('#content').innerHTML = c.html;
+  $('title').innerText = c.title;
 }
 
 function err(...e) {

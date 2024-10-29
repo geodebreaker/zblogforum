@@ -88,8 +88,8 @@ function content(ourl) {
   url = url.join('/');
   switch (type) {
     case '':
-      return {type: 'html', html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>`};
+      return {type: 'html', title: 'ZBlogForums', html: `<h3>MAIN PAGE</h3><hr><div>TIME: ${Date.now().toString(16).slice(-8, -2)}</div>`};
     default:
-      return {type: 'html', html: '404 Not Found'};
+      return {type: 'html', title: 'Page not found', html: '404 Not Found'};
   }
 }
