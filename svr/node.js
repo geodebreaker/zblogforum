@@ -107,7 +107,7 @@ function content(ourl) {
   switch (type) {
     case '':
       return { type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })), 
-        items: { "rules": "/rules" } };
+        items: { "Rules": "/rules" } };
     case 'user':
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name }));
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
@@ -117,6 +117,12 @@ function content(ourl) {
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       else
         return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
+    case 'rules':
+      try {
+        return { type: 'html', title: 'Rules - ZBlogForums', html: getfile('./site/src/rules.html').toString() };
+      } catch (e) {
+        return { type: 'html', title: 'Rules - ZBlogForums', html: 'Failed to get rules.' };
+      }
     default:
       return { type: 'html', title: 'Page not found', html: '404 Not Found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
   }
