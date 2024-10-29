@@ -23,6 +23,7 @@ body {
 }
 
 h3 { margin: 5px 0 }
+a:visited { color: blue; }
 
 .mod {
   display: none !important;
