@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "node svr/node.js"
+  },
   "dependencies": {
     "dotenv": "^16.4.5",
     "mysql2": "^3.11.3"
