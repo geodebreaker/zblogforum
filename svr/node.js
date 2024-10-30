@@ -1,6 +1,7 @@
-const DEV = true;
-
 require('dotenv').config();
+
+const DEV = !process.env.AWS;
+
 const conn = require('mysql2').createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -35,9 +36,19 @@ const extToMIME = {
   zip: 'application/zip',
 };
 
-function query(){
-  
+async function fetchUsers() {
+  const sql = 'SELECT * FROM users';
+  return new Promise((y, n) => conn.query(sql, (err, res) => {
+    if(err)
+      return n(err);
+    USERS = Object.fromEntries(res.map(x => ([x.un, {un: x.un, pw: x.pw, id: x.id, perm: x.perm}])));
+    y();
+  }));
 }
+
+// function updateUsers(){
+
+// }
 
 require('http').createServer(async (req, res) => {
   var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[%a-zA-Z0-9_-]{16}/) ?? [])[0]];
@@ -124,12 +135,18 @@ function api(res, url, params, auth) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
-      if (true) {
-        var atk = createId(null, 16);
-        AUTH[atk] = [params.un, Date.now() + (86400e3)];
-        res.setHeader('Set-Cookie', 'AUTH_TOKEN=' + atk + '; Max-Age=86400; ')//SameSite=Strict; Secure; HttpOnly; Path=/');
-        ret({});
-      }
+      // DELETE FROM `sutks` WHERE id=1 AND (un="" OR un="gb")
+      if (!USERS[params.un])
+        return ret({ fail: 'User does not exist.' })
+      if (!USERS[params.un].pw == params.pw)
+        return ret({ fail: 'Invalid password.' })
+      var atk = createId(null, 16);
+      AUTH[atk] = [params.un, Date.now() + (86400e3)];
+      res.setHeader('Set-Cookie', 'AUTH_TOKEN=' + atk + '; Max-Age=86400; SameSite=Strict; Secure; HttpOnly; Path=/');
+      ret({});
+      break;
+    case 'log':
+      ret(getfile('/var/log/web.stdout.log').toString().slice(-10000, -1));
       break;
     default:
       ret();
@@ -203,3 +220,7 @@ function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZC
 const AUTH = {
   '%erase%': ['error']
 };
+
+const USERS = {};
+
+fetchUsers()
