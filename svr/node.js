@@ -22,7 +22,8 @@ const extToMIME = {
   zip: 'application/zip',
 };
 
-require('http').createServer((req, res) => {
+require('http').createServer(async (req, res) => {
+  var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[%a-zA-Z0-9_-]{16}/) ?? [])[0]];
   var params = Object.fromEntries(new URL(req.url, 'http://a/').searchParams.entries());
   var url = req.url.replace(/^\//, '').replaceAll('//', '/').replace(/\?.+$/i, '').split('/');
   var type = url.length == 1 ? 0 : url.shift();
@@ -36,43 +37,52 @@ require('http').createServer((req, res) => {
   }
   url = url.join('/');
   if (type == 0) {
-    console.log('MAIN:', url);
+    console.log(auth ? auth[0] + ':' : '', 'MAIN:', url);
     var file = getfile('./site/index.html');
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(file);
   } else if (type == 1) {
-    src(res, url)
+    src(res, url, auth)
   } else if (type == 2) {
-    api(res, url, params)
+    api(res, url, params, auth)
   } else {
-    console.log('NCF 500:', url);
+    console.log(auth ? auth[0] + ':' : '', 'NCF 500:', url);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('500 Internal Server Error');
   }
 }).listen(8080);
 
-function src(res, url) {
+function src(res, url, auth) {
   try {
     var file = getfile('./site/src/' + url);
-    if(DEV && url == 'sw.js')
+    if (DEV && url == 'sw.js')
       file = file.toString().replace('DEV = false', 'DEV = true');
-    console.log('SRC 200:', url);
+    console.log(auth ? auth[0] + ':' : '', 'SRC 200:', url);
     res.writeHead(200, { 'Content-Type': extToMIME[url.match(/(?<=\.)[a-z]{2,4}$/i)] ?? 'text/html' });
     res.end(file);
   } catch (e) {
-    console.log('SRC 404:', url);
+    console.log(auth ? auth[0] + ':' : '', 'SRC 404:', url);
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('404 Not Found');
   }
 }
 
-function api(res, url, params) {
+function api(res, url, params, auth) {
   const ret = x => {
     var status = x ? 200 : 500;
-    console.log('API ' + status + ':', url);
+    console.log(auth ? auth[0] + ':' : '', 'API ' + status + ':', url, url == 'content' ? params.q : '');
     res.writeHead(status, { 'Content-Type': x ? 'application/json' : 'text/plain' });
     res.end(x ? JSON.stringify(x) : '500 Internal Server Error');
   };
+  if (
+    (url == '/content' && params.q.startsWith('/signout')) ||
+    (!(url == 'content' && params.q.startsWith('/signin')) &&
+      url != 'signin' &&
+      (!auth || auth[1] < Date.now()))) {
+    res.setHeader('Set-Cookie', 'AUTH_TOKEN=%erase%;');
+    return ret({ type: 'signin', title: 'Redirecting...' });
+  }
+  var un = (auth ?? [])[0];
   switch (url) {
     case 'content':
       if (params.q == undefined)
@@ -85,16 +95,24 @@ function api(res, url, params) {
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
       if (!post)
         return ret();
-      var newpost = { id: createId('r'), user: createId('u'), data: params.d };
+      var newpost = { id: createId('r'), user: un, data: params.d };
       post.replies.push(newpost);
       ret(newpost);
       break;
     case 'create':
       if (!params.d || !params.n)
         return ret();
-      var newpost = { id: createId('r'), user: createId('u'), name: params.n, replies: [], data: params.d };
+      var newpost = { id: createId('r'), user: un, name: params.n, replies: [], data: params.d };
       POSTS.push(newpost);
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
+      break;
+    case 'signin':
+      if (true) {
+        var atk = createId(null, 16);
+        AUTH[atk] = [params.un, Date.now() + (86400e3)];
+        res.setHeader('Set-Cookie', 'AUTH_TOKEN=' + atk + '; Max-Age=86400; ')//SameSite=Strict; Secure; HttpOnly; Path=/');
+        ret({});
+      }
       break;
     default:
       ret();
@@ -106,6 +124,11 @@ function content(ourl) {
   var url = ourl.split('/');
   if (url.length > 1) url.shift();
   var type = url.shift() ?? '';
+  if (type.includes('?')) {
+    var type = type.split(/\?/);
+    url[0] = '?' + type[1] + url[0];
+    type = type[0];
+  }
   var user = null;
   if (type.startsWith('@')) {
     user = type.replace('@', '');
@@ -132,6 +155,7 @@ function content(ourl) {
         return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
     case 'rules':
     case 'create':
+    case 'signin':
       try {
         return { type: 'html', title: type + ' - ZBlogForums', html: getfile('./site/src/' + type + '.html').toString() };
       } catch (e) {
@@ -156,5 +180,9 @@ const POSTS = [
 ];
 
 function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {
-  return y + ':' + new Array(l).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
+  return (y ? y + ':' : '') + new Array(l).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
 }
+
+const AUTH = {
+  '%erase%': ['error']
+};
