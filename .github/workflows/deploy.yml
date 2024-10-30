@@ -1,0 +1,44 @@
+# .github/workflows/deploy.yml
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main  # Adjust the branch as needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js (if you have a Node.js application)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Set to your Node version
+
+      - name: Install dependencies
+        run: npm install # Adjust if you’re using a different language/environment
+
+      - name: Zip application files
+        run: |
+          zip deploy.zip svr
+
+      - name: Deploy to Elastic Beanstalk
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
+          EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
+        run: |
+          # Install the Elastic Beanstalk CLI
+          pip install --upgrade pip
+          pip install awsebcli
+
+          # Initialize EB CLI and deploy
+          eb init "$EB_APP_NAME" --region "$AWS_REGION"
+          eb use "$EB_ENV_NAME"
+          eb deploy --staged
