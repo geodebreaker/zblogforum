@@ -23,8 +23,7 @@ jobs:
         run: npm install # Adjust if you’re using a different language/environment
 
       - name: Zip application files
-        run: |
-          zip deploy.zip svr
+        run: zip deploy.zip svr
 
       - name: Deploy to Elastic Beanstalk
         env:
@@ -39,6 +38,6 @@ jobs:
           pip install awsebcli
 
           # Initialize EB CLI and deploy
-          eb init "$EB_APP_NAME" --region "$AWS_REGION" -i
+          eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js 14" -i
           eb use "$EB_ENV_NAME" -i
           eb deploy --staged -i
