@@ -15,9 +15,14 @@ function init() {
         case 'R':
           go();
           break;
+        case 'C':
+          go('/create')
+          break;
       }
     }
   };
+  if ('serviceWorker' in navigator)
+    navigator.serviceWorker.register('/src/sw.js') 
   go();
 }
 
@@ -118,7 +123,7 @@ function reply(pid) {
 function escapeHTML(html) {
   var x = document.createElement('span');
   x.innerText = html;
-  return x.innerText;
+  return x.innerHTML;
 }
 
 function mkrepl(r) {
@@ -128,12 +133,20 @@ function mkrepl(r) {
     <div>${escapeHTML(r.data)}</div>`;
 }
 
+function mkpost() {
+  var d = $('.cp-cont').value;
+  var n = $('.cp-name').value;
+  $('.mkpost').disabled = true;
+  if(d && n)
+    net('create', {d, n}).then(u => go(u.url));
+}
+
 async function net(url, dat) {
   var c = await fetch('/api/' + url + '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&')).then(
     r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
     e => ({ fail: 'Error occured: ' + e }));
   if (c.fail)
-    return err('Failed to fetch page content. Please reload.',
+    err('Failed to fetch page content. Please reload.',
       (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
   return c;
 }

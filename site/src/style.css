@@ -15,6 +15,7 @@ body {
   /* grid-template-areas: "h h" "c m"; */
   grid-template-areas: "h h" "c c";
   height: 100vh;
+  overflow: clip;
 }
 
 .right {
@@ -30,6 +31,7 @@ a:visited { color: blue; }
 }
 
 #header {
+  z-index: 100;
   background: blue;
   font-size: 30px;
   padding: 5px;
@@ -42,6 +44,7 @@ a:visited { color: blue; }
 #content {
   padding: 10px;
   grid-area: c;
+  overflow-y: scroll;
 }
 
 #menu {

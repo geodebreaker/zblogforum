@@ -1,3 +1,5 @@
+const DEV = true;
+
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
 const extToMIME = {
@@ -45,20 +47,22 @@ require('http').createServer((req, res) => {
   } else {
     console.log('NCF 500:', url);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
-    res.end('500 Internal Server Error\n\n-- ZBF --');
+    res.end('500 Internal Server Error');
   }
 }).listen(8080);
 
 function src(res, url) {
   try {
     var file = getfile('./site/src/' + url);
+    if(DEV && url == 'sw.js')
+      file = file.toString().replace('DEV = false', 'DEV = true');
     console.log('SRC 200:', url);
     res.writeHead(200, { 'Content-Type': extToMIME[url.match(/(?<=\.)[a-z]{2,4}$/i)] ?? 'text/html' });
     res.end(file);
   } catch (e) {
     console.log('SRC 404:', url);
     res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('404 Not Found\n\n-- ZBF --');
+    res.end('404 Not Found');
   }
 }
 
@@ -67,7 +71,7 @@ function api(res, url, params) {
     var status = x ? 200 : 500;
     console.log('API ' + status + ':', url);
     res.writeHead(status, { 'Content-Type': x ? 'application/json' : 'text/plain' });
-    res.end(x ? JSON.stringify(x) : '500 Internal Server Error\n\n-- ZBF --');
+    res.end(x ? JSON.stringify(x) : '500 Internal Server Error');
   };
   switch (url) {
     case 'content':
@@ -79,11 +83,18 @@ function api(res, url, params) {
       if (!params.p || !params.d)
         return ret();
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
-      if(!post)
+      if (!post)
         return ret();
       var newpost = { id: createId('r'), user: createId('u'), data: params.d };
       post.replies.push(newpost);
       ret(newpost);
+      break;
+    case 'create':
+      if (!params.d || !params.n)
+        return ret();
+      var newpost = { id: createId('r'), user: createId('u'), name: params.n, replies: [], data: params.d };
+      POSTS.push(newpost);
+      ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     default:
       ret();
@@ -106,25 +117,31 @@ function content(ourl) {
   url = url.join('/');
   switch (type) {
     case '':
-      return { type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })), 
-        items: { "Rules": "/rules" } };
+      return {
+        type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })).reverse(),
+        items: { "Rules": "/rules" }
+      };
     case 'user':
-      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name }));
+      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
     case 'post':
       var post = POSTS.find(x => x.id == url && x.user == user);
       if (post)
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       else
-        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
+        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
     case 'rules':
+    case 'create':
       try {
-        return { type: 'html', title: 'Rules - ZBlogForums', html: getfile('./site/src/rules.html').toString() };
+        return { type: 'html', title: type + ' - ZBlogForums', html: getfile('./site/src/' + type + '.html').toString() };
       } catch (e) {
-        return { type: 'html', title: 'Rules - ZBlogForums', html: 'Failed to get rules.' };
+        return {
+          fail: 'Failed to get ' + type + ' page', type: 'html',
+          title: type + ' - ZBlogForums', html: 'Failed to get ' + type + ' page.'
+        };
       }
     default:
-      return { type: 'html', title: 'Page not found', html: '404 Not Found<br><br><a onclick="go(\'/\')" href="">Homepage</a>' };
+      return { type: 'html', title: 'Page not found', html: '404 Not Found<br><br><a onclick="go(\'/\')">Homepage</a>' };
   }
 }
 
