@@ -221,6 +221,6 @@ const AUTH = {
   '%erase%': ['error']
 };
 
-const USERS = {};
+USERS = {};
 
 fetchUsers()
