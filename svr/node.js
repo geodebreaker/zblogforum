@@ -107,7 +107,7 @@ function api(res, url, params, auth) {
     (!(url == 'content' && params.q.startsWith('/signin')) &&
       url != 'signin' &&
       (!auth || auth[1] < Date.now()))) {
-    res.setHeader('Set-Cookie', 'AUTH_TOKEN=%erase%;');
+    res.setHeader('Set-Cookie', 'AUTH_TOKEN=;');
     return ret({ type: 'signin', title: 'Redirecting...' });
   }
   var un = (auth ?? [])[0];
@@ -217,9 +217,7 @@ function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZC
   return (y ? y + ':' : '') + new Array(l).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
 }
 
-const AUTH = {
-  '%erase%': ['error']
-};
+const AUTH = {};
 
 USERS = {};
 
