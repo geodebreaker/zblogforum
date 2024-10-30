@@ -38,6 +38,6 @@ jobs:
           pip install awsebcli
 
           # Initialize EB CLI and deploy
-          yes | eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js" -i
+          no | eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js" -i
           yes | eb use "$EB_ENV_NAME" -i
           yes | eb deploy --staged -i
