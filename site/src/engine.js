@@ -171,10 +171,10 @@ function signin() {
     return $('#silog').innerText = 'username must only have letters, numbers, - and _';
   if (pw.length < 4)
     return $('#silog').innerText = 'password must be at least 4 chars';
-  if (!([/\w/, /[a-z]/, /[A-Z]/, /[!@#$%^&*()_+{}|~`\\\][<>?,./;:'"-=]/]
-    .map(x => x.test(pw) ? 1 : 0).reduce((a, b) => a + b) >= 3))
-    return $('#silog').innerText = 'password must contain at least 3 of uppercase, lowercase, \n' +
-      'numbers, and special chars';
+  // if (!([/\w/, /[a-z]/, /[A-Z]/, /[!@#$%^&*()_+{}|~`\\\][<>?,./;:'"-=]/]
+  //   .map(x => x.test(pw) ? 1 : 0).reduce((a, b) => a + b) >= 3))
+  //   return $('#silog').innerText = 'password must contain at least 3 of uppercase, lowercase, \n' +
+  //     'numbers, and special chars';
   net('signin', { un, pw, tk }, false).then(
     () => {
       go(decodeURI(location.search.split('=')[1] || '/'));
