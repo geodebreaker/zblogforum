@@ -14,13 +14,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # - name: Set up Node.js (if you have a Node.js application)
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '16' # Set to your Node version
+      - name: Set up Node.js (if you have a Node.js application)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Set to your Node version
 
-      # - name: Install dependencies
-      #   run: npm install # Adjust if you’re using a different language/environment
+      - name: Install dependencies
+        run: npm install # Adjust if you’re using a different language/environment
 
       - name: Zip application files
         run: |
