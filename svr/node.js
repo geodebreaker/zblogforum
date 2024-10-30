@@ -103,7 +103,7 @@ function api(res, url, params, auth) {
     res.end(x ? JSON.stringify(x) : '500 Internal Server Error');
   };
   if (
-    (url == '/content' && params.q.startsWith('/signout')) ||
+    (url == 'content' && params.q.startsWith('/signout')) ||
     (!(url == 'content' && params.q.startsWith('/signin')) &&
       url != 'signin' &&
       (!auth || auth[1] < Date.now()))) {
