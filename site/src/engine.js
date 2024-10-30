@@ -22,7 +22,7 @@ function init() {
     }
   };
   if ('serviceWorker' in navigator)
-    navigator.serviceWorker.register('/src/sw.js') 
+    navigator.serviceWorker.register('/src/sw.js')
   go();
 }
 
@@ -38,6 +38,9 @@ async function go(loc, stat) {
   $('#content').innerHTML = "";
   $('title').innerText = c.title;
   switch (c.type) {
+    case 'signin':
+      setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname));
+      break;
     case 'html':
       $('#content').innerHTML = c.html;
       break;
@@ -115,9 +118,11 @@ function mkp_post(post) {
 }
 
 function reply(pid) {
-  var x = prompt('AAAAAHHH');
+  var x = prompt('');
   if (x)
     net('reply', { p: pid, d: x }).then(x => mkrepl(x));
+  else
+    err('You need to enter text to reply.');
 }
 
 function escapeHTML(html) {
@@ -137,18 +142,47 @@ function mkpost() {
   var d = $('.cp-cont').value;
   var n = $('.cp-name').value;
   $('.mkpost').disabled = true;
-  if(d && n)
-    net('create', {d, n}).then(u => go(u.url));
+  if (d && n)
+    net('create', { d, n }).then(u => go(u.url));
+  else
+    err('You need to enter text to post.');
 }
 
-async function net(url, dat) {
+async function net(url, dat, err) {
   var c = await fetch('/api/' + url + '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&')).then(
     r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
     e => ({ fail: 'Error occured: ' + e }));
-  if (c.fail)
+  if (c.fail && err)
     err('Failed to fetch page content. Please reload.',
       (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
+  else if (c.fail)
+    throw c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail;
   return c;
+}
+
+function signin() {
+  $('#silog').innerText = '...';
+  var un = $('#username').value;
+  var pw = $('#password').value;
+  var tk = $('#sutk').value;
+  if (un.length < 2 || un.length > 12)
+    return $('#silog').innerText = 'username must be at least 2 and at most 12 chars';
+  if (!(/^[a-zA-Z0-9-_]+$/.test(un)))
+    return $('#silog').innerText = 'username must only have letters, numbers, - and _';
+  if (pw.length < 4)
+    return $('#silog').innerText = 'password must be at least 4 chars';
+  if (!([/\w/, /[a-z]/, /[A-Z]/, /[!@#$%^&*()_+{}|~`\\\][<>?,./;:'"-=]/]
+    .map(x => x.test(pw) ? 1 : 0).reduce((a, b) => a + b) >= 3))
+    return $('#silog').innerText = 'password must contain at least 3 of uppercase, lowercase, \n' +
+      'numbers, and special chars';
+  net('signin', { un, pw, tk }, false).then(
+    () => {
+      go(decodeURI(location.search.split('=')[1] || '/'));
+      $('#silog').innerText = '';
+    }, e => {
+      $('#silog').innerText = e;
+    }
+  )
 }
 
 document.addEventListener('DOMContentLoaded', init);
