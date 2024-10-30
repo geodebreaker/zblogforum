@@ -1,5 +1,18 @@
 const DEV = true;
 
+require('dotenv').config();
+const conn = require('mysql2').createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: 'zbf',
+  port: 3306
+});
+conn.connect(e => {
+  if (e)
+    return console.error('Error connecting to the database:', e);
+  console.log('Connected to MySQL');
+});
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
 const extToMIME = {
@@ -21,6 +34,10 @@ const extToMIME = {
   ttf: 'font/ttf',
   zip: 'application/zip',
 };
+
+function query(){
+  
+}
 
 require('http').createServer(async (req, res) => {
   var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[%a-zA-Z0-9_-]{16}/) ?? [])[0]];
