@@ -138,8 +138,8 @@ function api(res, url, params, auth) {
       // DELETE FROM `sutks` WHERE id=1 AND (un="" OR un="gb")
       if (!USERS[params.un])
         return ret({ fail: 'User does not exist.' })
-      if (!USERS[params.un].pw == params.pw)
-        return ret({ fail: 'Invalid password.' })
+      if (USERS[params.un].pw != params.pw)
+        return ret({ fail: 'Invalid password.' });
       var atk = createId(null, 16);
       AUTH[atk] = [params.un, Date.now() + (86400e3)];
       res.setHeader('Set-Cookie', 'AUTH_TOKEN=' + atk + '; Max-Age=86400; SameSite=Strict; Secure; HttpOnly; Path=/');
@@ -176,7 +176,7 @@ function content(ourl) {
     case '':
       return {
         type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })).reverse(),
-        items: { "Rules": "/rules" }
+        items: { "Rules": "/rules", "Sign Out": "/signout" }
       };
     case 'user':
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
