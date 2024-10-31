@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+      {
+          "id": "commitMessage",
+          "type": "promptString",
+          "description": "Enter your commit message"
+      }
+  ],
+  "tasks": [
+      {
+          "label": "Auto Commit and Push",
+          "type": "shell",
+          "command": "bash",
+          "args": [
+              "-c",
+              "git fetch && git add . && git commit -m '${input:commitMessage}' && git push && git sync"
+          ],
+          "problemMatcher": []
+      }
+  ]
+}
