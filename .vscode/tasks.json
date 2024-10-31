@@ -9,19 +9,19 @@
   ],
   "tasks": [
       {
-          "label": "Auto Commit and Push",
+          "label": "autocommit",
           "type": "shell",
           "command": "bash",
           "args": [
               "-c",
-              "git fetch && git add . && git commit -m '${input:commitMessage}' && git push && git sync"
+              "git fetch && git add . && git commit -m '${input:commitMessage}' && git pull && git push"
           ],
           "problemMatcher": [],
           "presentation": {
-              "reveal": "never", // Don't reveal the terminal
-              "echo": false,     // Don't show the command in the output
-              "focus": false,    // Don't focus on the terminal
-              "panel": "shared"  // Use a shared terminal panel (optional)
+              "reveal": "never",
+              "echo": false,
+              "focus": false,
+              "panel": "shared"
           }
       }
   ]
