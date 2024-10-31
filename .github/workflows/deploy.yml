@@ -17,7 +17,7 @@ jobs:
       - name: Set up Node.js (if you have a Node.js application)
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Set to your Node version
+          node-version: '20' # Set to your Node version
 
       - name: Install dependencies
         run: npm install # Adjust if you’re using a different language/environment
@@ -38,7 +38,7 @@ jobs:
           pip install awsebcli
 
           # Initialize EB CLI and deploy
-          yes n | eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js" -i
+          yes no | eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js" -i
           yes | eb use "$EB_ENV_NAME"
           yes | eb deploy --staged
 
