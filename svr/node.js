@@ -27,7 +27,7 @@ const extToMIME = {
   jpg: 'image/jpeg',
   gif: 'image/gif',
   webp: 'image/webp',
-  ico: 'image/x-icon',
+  ico: 'image/x-icon', 
   mp3: 'audio/mpeg',
   wav: 'audio/wav',
   mp4: 'video/mp4',
