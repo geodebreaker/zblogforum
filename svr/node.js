@@ -51,7 +51,7 @@ async function fetchUsers() {
 // }
 
 require('http').createServer(async (req, res) => {
-  var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[a-zA-Z0-9_-]{16}(?:.*$)/ig) ?? [])[0]];
+  var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[a-zA-Z0-9_-]{16}/g) ?? [])[0]];
   var params = Object.fromEntries(new URL(req.url, 'http://a/').searchParams.entries());
   var url = req.url.replace(/^\//, '').replaceAll('//', '/').replace(/\?.+$/i, '').split('/');
   var type = url.length == 1 ? 0 : url.shift();
