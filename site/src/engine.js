@@ -46,7 +46,7 @@ async function go(loc, stat) {
       break;
     case 'home':
       mkp_home(c)
-      break;
+      break; 
     case 'post':
       mkp_post(c.post);
       break;
