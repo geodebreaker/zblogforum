@@ -23,7 +23,7 @@ body {
   width: 50%;
 }
 
-li {
+ul>li {
   border-radius: 10px;
   padding-left: 5px;
   width: 200px;
@@ -48,6 +48,54 @@ a:visited {
 
 .mod {
   display: none !important;
+}
+
+.button {
+  font-weight: bold;
+  border: 2px solid gray;
+  background: #444;
+  margin: 4px;
+  padding: 4px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+input {
+  border: 2px solid gray;
+  background: #444;
+  margin: 4px;
+  padding: 4px;
+  display: inline-block;
+  cursor: text;
+  color: white;
+  font-family: monospace;
+  font-size: 20px;
+  outline: none;
+  width: 500px;
+}
+
+textarea {
+  border: 2px solid gray;
+  background: #444;
+  margin: 4px;
+  padding: 4px;
+  display: block;
+  cursor: text;
+  color: white;
+  font-family: monospace;
+  font-size: 20px;
+  outline: none;
+  width: 500px;
+  height: 250px;
+  resize: none;
+}
+
+.clearsize {
+  font-size: 0;
+}
+
+.clearsize > * {
+  font-size: 20px;
 }
 
 #header {
@@ -164,11 +212,5 @@ a:visited {
   color: blue;
   text-decoration: underline;
   user-select: none;
-  cursor: pointer;
-}
-
-#addrepl {
-  font-weight: bold;
-  font-size: 25px;
   cursor: pointer;
 }
