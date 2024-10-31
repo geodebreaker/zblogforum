@@ -190,9 +190,13 @@ function content(ourl) {
         }
       };
     case 'user':
+      if (!USERS[user])
+        return ret({ type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' });
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
     case 'post':
+      if (!USERS[user])
+        return ret({ type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' });
       var post = POSTS.find(x => x.id == url && x.user == user);
       if (post)
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
@@ -216,13 +220,13 @@ function content(ourl) {
 }
 
 const POSTS = [
-  { user: createId('u'), id: createId('p'), name: 'help oh god the darkness is coming (1)', data: 'g', replies: [] },
-  {
-    user: createId('u'), id: createId('p'), name: 'patooie', data: 'patooie', replies: [{
-      id: createId('r'), user: createId('u'), data: 'patooie',
-    }]
-  },
-  { user: createId('u'), id: createId('p'), name: 'ralseri', data: 'why.', replies: [] },
+  // { user: createId('u'), id: createId('p'), name: 'help oh god the darkness is coming (1)', data: 'g', replies: [] },
+  // {
+  //   user: createId('u'), id: createId('p'), name: 'patooie', data: 'patooie', replies: [{
+  //     id: createId('r'), user: createId('u'), data: 'patooie',
+  //   }]
+  // },
+  // { user: createId('u'), id: createId('p'), name: 'ralseri', data: 'why.', replies: [] },
 ];
 
 function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {

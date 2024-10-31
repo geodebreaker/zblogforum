@@ -57,6 +57,7 @@ async function go(loc, stat) {
       err('Unknown page type.');
       break;
   }
+  setTimeout(x => { if (location.pathname == x) go() }, 60e3, location.pathname);
 }
 
 function err(...e) {
