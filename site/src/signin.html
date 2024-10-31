@@ -1,10 +1,11 @@
 <h3>Sign In / Up</h3>
 <hr>
-<span>Username: </span><input name="don atuo" id="username" 
+<input name="don atuo" id="username" 
+  placeholder="Username"
   onkeydown="if(event.key=='Enter') $('#password').focus()"><br>
-<span>Password: </span><input id="password" type="password"
+<input id="password" type="password" placeholder="Password"
   onkeydown="if(event.key=='Enter') $('#signin').click()"><br>
 <span class="button" onclick="signin()" id="signin">Sign In</span><br>
-<span>Token (use to sign up): </span><input id="sutk"
+<input id="sutk" placeholder="Sign UP Token"
   onkeydown="if(event.key=='Enter') $('#signin').click()"><br><br>
 <div id="silog"></div>

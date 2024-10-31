@@ -113,7 +113,7 @@ function mkp_post(post) {
     <h3>${escapeHTML(post.name)}</h3>
     <div>${escapeHTML(post.data)}</div>
     <hr>
-    <div id="addrepl" onclick="reply('${post.user}/${post.id}')">Add Reply</div>`;
+    <div id="addrepl" class="button" onclick="reply('${post.user}/${post.id}')">Add Reply</div>`;
   post.replies.map(r => mkrepl(r));
 }
 
