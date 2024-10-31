@@ -1,7 +1,9 @@
 $ = (x, y = document) => y.querySelector(x);
+var fetchonfocus = false;
 
 function init() {
   window.onerror = alert;
+  window.onfocus = () => { if (fetchonfocus) go() };
   window.onpopstate = e => new Promise(y => y(go(null, e.state)));
   window.addEventListener('click', e => {
     if (e.target.tagName == 'A') {
@@ -46,7 +48,7 @@ async function go(loc, stat) {
       break;
     case 'home':
       mkp_home(c)
-      break; 
+      break;
     case 'post':
       mkp_post(c.post);
       break;
@@ -57,7 +59,14 @@ async function go(loc, stat) {
       err('Unknown page type.');
       break;
   }
-  setTimeout(x => { if (location.pathname == x) go() }, 60e3, location.pathname);
+  setTimeout(x => {
+    if (location.pathname == x) {
+      if (document.hasFocus())
+        go();
+      else
+        fetchonfocus = true
+    }
+  }, 60e3, location.pathname);
 }
 
 function err(...e) {
