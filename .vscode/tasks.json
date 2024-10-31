@@ -14,7 +14,7 @@
         "command": "bash",
         "args": [
             "-c",
-            "git fetch && git add . && git commit -m '${input:commitMessage}' && git pull && git push"
+            "git fetch && git add . && git commit -m '${input:commitMessage}' && git push && git pull && exit 0"
         ],
         "problemMatcher": [],
         "presentation": {
