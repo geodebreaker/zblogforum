@@ -23,7 +23,7 @@ jobs:
         run: npm install # Adjust if you’re using a different language/environment
 
       - name: Zip application files
-        run: zip -r deploy.zip .
+        run: zip -r deploy.zip . -x node_modules -x .github -x .vscode -x resources
 
       - name: Deploy to Elastic Beanstalk
         env:
