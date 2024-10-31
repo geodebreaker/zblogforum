@@ -39,9 +39,9 @@ const extToMIME = {
 async function fetchUsers() {
   const sql = 'SELECT * FROM users';
   return new Promise((y, n) => conn.query(sql, (err, res) => {
-    if(err)
+    if (err)
       return n(err);
-    USERS = Object.fromEntries(res.map(x => ([x.un, {un: x.un, pw: x.pw, id: x.id, perm: x.perm}])));
+    USERS = Object.fromEntries(res.map(x => ([x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }])));
     y();
   }));
 }
@@ -107,11 +107,17 @@ function api(res, url, params, auth) {
     (!(url == 'content' && params.q.startsWith('/signin')) &&
       url != 'signin' &&
       (!auth || auth[1] < Date.now()))) {
-    res.setHeader('Set-Cookie', 'AUTH_TOKEN=;');
+    res.setHeader('Set-Cookie', 'AUTH_TOKEN=; Max-Age=0; Path=/');
     return ret({ type: 'signin', title: 'Redirecting...' });
   }
   var un = (auth ?? [])[0];
   switch (url) {
+    case 'restart':
+      if (USERS[un].perm > 1)
+        process.exit();
+      else
+        ret({ 'fail': 'not enough permission' });
+      break;
     case 'content':
       if (params.q == undefined)
         return ret();
@@ -135,7 +141,7 @@ function api(res, url, params, auth) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
-      // DELETE FROM `sutks` WHERE id=1 AND (un="" OR un="gb")
+      // DELETE FROM `sutks` WHERE tk=? AND ttl>? AND (un="" OR un="gb")
       if (!USERS[params.un])
         return ret({ fail: 'User does not exist.' })
       if (USERS[params.un].pw != params.pw)
@@ -176,7 +182,12 @@ function content(ourl) {
     case '':
       return {
         type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })).reverse(),
-        items: { "Rules": "/rules", "Sign Out": "/signout" }
+        items: {
+          "Rules": "/rules",
+          "Checklist": "/checklist",
+          "\n": "",
+          "Sign Out": "/signout",
+        }
       };
     case 'user':
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
@@ -190,6 +201,7 @@ function content(ourl) {
     case 'rules':
     case 'create':
     case 'signin':
+    case 'checklist':
       try {
         return { type: 'html', title: type + ' - ZBlogForums', html: getfile('./site/src/' + type + '.html').toString() };
       } catch (e) {
@@ -221,4 +233,5 @@ const AUTH = {};
 
 USERS = {};
 
-fetchUsers()
+setInterval(() => fetchUsers(), 3600e3);
+fetchUsers();

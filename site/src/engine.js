@@ -30,8 +30,8 @@ async function go(loc, stat) {
   if (loc && !stat)
     history.pushState({}, '', loc);
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
-    var c = await net('content', { q: loc ?? location.pathname });
-    history.replaceState({ ttl: Date.now(), stat: c }, '', location.pathname);
+    var c = await net('content', { q: loc ?? location.pathname + location.search });
+    history.replaceState({ ttl: Date.now(), stat: c }, '', location.pathname + location.search);
   } else {
     c = stat.stat;
   }
@@ -39,7 +39,7 @@ async function go(loc, stat) {
   $('title').innerText = c.title;
   switch (c.type) {
     case 'signin':
-      setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname));
+      setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
       break;
     case 'html':
       $('#content').innerHTML = c.html;
@@ -162,7 +162,7 @@ async function net(url, dat, err) {
 
 function signin() {
   $('#silog').innerText = '...';
-  var un = $('#username').value;
+  var un = $('#username').value.toLowerCase();
   var pw = $('#password').value;
   var tk = $('#sutk').value;
   if (un.length < 2 || un.length > 12)
