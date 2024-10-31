@@ -89,8 +89,8 @@ function module(name, inputs, nhtml) {
 }
 
 function mkp_home(x) {
-  $('#content').innerHTML = `<div class="right"><h3>ZBlogForums</h3>by evrtdg<hr>${Object.entries(x.items).map(x =>
-    '<a href="' + x[1] + '">' + x[0] + '</a>').join('<br>')}</div>`;
+  $('#content').innerHTML = `<div class="right"><h3>ZBlogForums</h3>by evrtdg<hr>${x.items.map(x =>
+    x[0] == '\n' ? '<hr>' : '<a href="' + x[1] + '">' + x[0] + '</a>' + '<br>').join(' ')}</div>`;
   x.posts.map(y => {
     $('#content').append(
       module('postslot', {
@@ -196,3 +196,8 @@ function signin() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// JS is a dumb piece of fucking shit godamnit
+function isString(x){
+  return Object.getPrototypeOf(x).isPrototypeOf(new String(""));
+}

@@ -2,18 +2,21 @@ require('dotenv').config();
 
 const DEV = !process.env.AWS;
 
-const conn = require('mysql2').createConnection({
+const SQLCONFIG = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: 'zbf',
   port: 3306
-});
+};
+const conn = require('mysql2').createConnection(SQLCONFIG);
 conn.connect(e => {
   if (e)
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
-  setInterval(conn.query, 300e3, 'SELECT * FROM sutks', () => { });
+  setInterval(conn.query, 300e3, 'SELECT * FROM sutks', () => {
+    console.log('Keep Alive');
+  });
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -36,6 +39,9 @@ const extToMIME = {
   ttf: 'font/ttf',
   zip: 'application/zip',
 };
+function insertArray(a, i, ...x) {
+  return [...a.slice(0, i), ...x, ...a.slice(i)];
+}
 
 function fetchUsers() {
   const sql = 'SELECT * FROM users';
@@ -47,12 +53,14 @@ function fetchUsers() {
   }));
 }
 
-function mksutk(ttl, un="") {
+function mksutk(ttl, un = "") {
   var sutk = createId('sutk', 8);
   const sql = 'INSERT INTO sutks (tk, ttl, un) VALUES (?, ?, ?)';
   return new Promise((y, n) => conn.query(sql, [sutk, Date.now() + (ttl * 86400e3), un], (err) => {
-    if (err)
+    if (err) {
+      console.log(err);
       return y(false);
+    }
     y(sutk);
   }));
 }
@@ -127,10 +135,10 @@ function src(res, url, auth) {
 
 async function api(res, url, params, auth, authrt) {
   const ret = x => {
-    var status = x ? 200 : 500;
+    var status = x != undefined ? 200 : 500;
     console.log(auth ? auth[0] + ':' : '', 'API ' + status + ':', url, url == 'content' ? params.q : '');
-    res.writeHead(status, { 'Content-Type': x ? 'application/json' : 'text/plain' });
-    res.end(x ? JSON.stringify(x) : '500 Internal Server Error');
+    res.writeHead(status, { 'Content-Type': x != undefined ? 'application/json' : 'text/plain' });
+    res.end(x != undefined ? JSON.stringify(x) : '500 Internal Server Error');
   };
   if (
     (url == 'content' && params.q.startsWith('/signout')) ||
@@ -152,16 +160,16 @@ async function api(res, url, params, auth, authrt) {
       break;
     case 'gensutk':
       if (!params.ttl)
-        ret({ 'fail': 'ttl not specified' });
+        return ret({ 'fail': 'ttl not specified' });
       if (USERS[un].perm > 2)
-        ret(mksutk(params.ttl, params.un));
+        return ret(await mksutk(params.ttl, params.un));
       else
         ret({ 'fail': 'not enough permission' });
       break;
     case 'content':
       if (params.q == undefined)
         return ret();
-      var cont = content(params.q);
+      var cont = content(params.q, un);
       cont.un = un;
       cont.notif = 0;
       ret(cont);
@@ -211,7 +219,7 @@ async function api(res, url, params, auth, authrt) {
   }
 }
 
-function content(ourl) {
+function content(ourl, un) {
   var url = ourl.split('/');
   if (url.length > 1) url.shift();
   var type = url.shift() ?? '';
@@ -231,15 +239,18 @@ function content(ourl) {
   url = url.join('/');
   switch (type) {
     case '':
-      return {
+      var out = {
         type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })).reverse(),
-        items: {
-          "Rules": "/rules",
-          "Checklist": "/checklist",
-          "\n": "",
-          "Sign Out": "/signout",
-        }
+        items: [
+          ["Rules", "/rules"],
+          ["Checklist", "/checklist"],
+          ["\n", ""],
+          ["Sign Out", "/signout"],
+        ]
       };
+      if (USERS[un].perm > 2)
+        out.items = insertArray(out.items, 2, ["\n", ""], ["Admin panel", "/apanel"])
+      return out;
     case 'user':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
@@ -253,6 +264,9 @@ function content(ourl) {
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       else
         return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
+    case 'apanel':
+      if (USERS[un].perm < 2)
+        return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
     case 'rules':
     case 'create':
     case 'signin':
