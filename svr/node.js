@@ -13,6 +13,7 @@ conn.connect(e => {
   if (e)
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
+  setInterval(conn.query, 300e3, 'SELECT * FROM sutks', () => { });
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -27,7 +28,7 @@ const extToMIME = {
   jpg: 'image/jpeg',
   gif: 'image/gif',
   webp: 'image/webp',
-  ico: 'image/x-icon', 
+  ico: 'image/x-icon',
   mp3: 'audio/mpeg',
   wav: 'audio/wav',
   mp4: 'video/mp4',
@@ -36,7 +37,7 @@ const extToMIME = {
   zip: 'application/zip',
 };
 
-async function fetchUsers() {
+function fetchUsers() {
   const sql = 'SELECT * FROM users';
   return new Promise((y, n) => conn.query(sql, (err, res) => {
     if (err)
@@ -46,12 +47,41 @@ async function fetchUsers() {
   }));
 }
 
-// function updateUsers(){
+function mksutk(ttl, un="") {
+  var sutk = createId('sutk', 8);
+  const sql = 'INSERT INTO sutks (tk, ttl, un) VALUES (?, ?, ?)';
+  return new Promise((y, n) => conn.query(sql, [sutk, Date.now() + (ttl * 86400e3), un], (err) => {
+    if (err)
+      return y(false);
+    y(sutk);
+  }));
+}
+
+// function updateUser() {
 
 // }
 
+function addUserIfSignup(tk, un, pw) {
+  const sql = 'DELETE FROM sutks WHERE tk=? AND ttl>? AND (un="" OR un=?)';
+  return new Promise((y, n) => conn.query(sql, [tk, Date.now(), un], (err, res) => {
+    if (err)
+      return y(false);
+    const sql = 'INSERT INTO users (un, pw) VALUES (?, ?)';
+    if (res.affectedRows > 0)
+      conn.query(sql, [un, pw], (err, res) => {
+        if (err)
+          return y(false);
+        USERS[un] = { un, pw, id: res.insertId, perm: 0 };
+        y(true);
+      });
+    else
+      y(false);
+  }));
+}
+
 require('http').createServer(async (req, res) => {
-  var auth = AUTH[((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[a-zA-Z0-9_-]{16}/g) ?? [])[0]];
+  var authrt = ((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[a-zA-Z0-9_-]{16}/g) ?? [])[0];
+  var auth = AUTH[authrt];
   var params = Object.fromEntries(new URL(req.url, 'http://a/').searchParams.entries());
   var url = req.url.replace(/^\//, '').replaceAll('//', '/').replace(/\?.+$/i, '').split('/');
   var type = url.length == 1 ? 0 : url.shift();
@@ -72,7 +102,7 @@ require('http').createServer(async (req, res) => {
   } else if (type == 1) {
     src(res, url, auth)
   } else if (type == 2) {
-    api(res, url, params, auth)
+    api(res, url, params, auth, authrt)
   } else {
     console.log(auth ? auth[0] + ':' : '', 'NCF 500:', url);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -95,7 +125,7 @@ function src(res, url, auth) {
   }
 }
 
-function api(res, url, params, auth) {
+async function api(res, url, params, auth, authrt) {
   const ret = x => {
     var status = x ? 200 : 500;
     console.log(auth ? auth[0] + ':' : '', 'API ' + status + ':', url, url == 'content' ? params.q : '');
@@ -107,21 +137,34 @@ function api(res, url, params, auth) {
     (!(url == 'content' && params.q.startsWith('/signin')) &&
       url != 'signin' &&
       (!auth || auth[1] < Date.now()))) {
+    if (auth)
+      delete AUTH[authrt];
     res.setHeader('Set-Cookie', 'AUTH_TOKEN=; Max-Age=0; Path=/');
     return ret({ type: 'signin', title: 'Redirecting...' });
   }
   var un = (auth ?? [])[0];
   switch (url) {
     case 'restart':
-      if (USERS[un].perm > 1)
+      if (USERS[un].perm > 2)
         process.exit();
+      else
+        ret({ 'fail': 'not enough permission' });
+      break;
+    case 'gensutk':
+      if (!params.ttl)
+        ret({ 'fail': 'ttl not specified' });
+      if (USERS[un].perm > 2)
+        ret(mksutk(params.ttl, params.un));
       else
         ret({ 'fail': 'not enough permission' });
       break;
     case 'content':
       if (params.q == undefined)
         return ret();
-      ret(content(params.q))
+      var cont = content(params.q);
+      cont.un = un;
+      cont.notif = 0;
+      ret(cont);
       break;
     case 'reply':
       if (!params.p || !params.d)
@@ -141,7 +184,8 @@ function api(res, url, params, auth) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
-      // DELETE FROM `sutks` WHERE tk=? AND ttl>? AND (un="" OR un="gb")
+      if (params.tk && !(await addUserIfSignup(params.tk, params.un, params.pw)))
+        return ret({ fail: 'Invalid token' });
       if (!USERS[params.un])
         return ret({ fail: 'User does not exist.' })
       if (USERS[params.un].pw != params.pw)
@@ -152,7 +196,14 @@ function api(res, url, params, auth) {
       ret({});
       break;
     case 'log':
-      ret(getfile('/var/log/web.stdout.log').toString().slice(-10000, -1));
+      if (USERS[un].perm > 2)
+        try {
+          ret(getfile('/var/log/web.stdout.log').toString().slice(-10000, -1));
+        } catch (e) {
+          ret({ fail: 'failed to get logs' });
+        }
+      else
+        ret({ fail: 'not enough permission' });
       break;
     default:
       ret();
@@ -191,12 +242,12 @@ function content(ourl) {
       };
     case 'user':
       if (!USERS[user])
-        return ret({ type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' });
+        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
     case 'post':
       if (!USERS[user])
-        return ret({ type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' });
+        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
       var post = POSTS.find(x => x.id == url && x.user == user);
       if (post)
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
