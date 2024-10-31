@@ -41,3 +41,9 @@ jobs:
           yes n | eb init "$EB_APP_NAME" --region "$AWS_REGION" --platform "node.js" -i
           yes | eb use "$EB_ENV_NAME"
           yes | eb deploy --staged
+
+      - name: Ping discord
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"content":"Deployed to Elastic Beanstalk"}' $WEBHOOK_URL
