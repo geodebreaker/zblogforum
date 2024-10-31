@@ -23,8 +23,28 @@ body {
   width: 50%;
 }
 
-h3 { margin: 5px 0 }
-a:visited { color: blue; }
+li {
+  border-radius: 10px;
+  padding-left: 5px;
+  width: 200px;
+  margin: 5px;
+}
+
+li.doing {
+  background: #ff08;
+}
+
+li.check {
+  text-decoration: line-through;
+}
+
+h3 {
+  margin: 5px 0;
+}
+
+a:visited {
+  color: blue;
+}
 
 .mod {
   display: none !important;
