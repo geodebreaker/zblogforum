@@ -16,7 +16,13 @@
               "-c",
               "git fetch && git add . && git commit -m '${input:commitMessage}' && git push && git sync"
           ],
-          "problemMatcher": []
+          "problemMatcher": [],
+          "presentation": {
+              "reveal": "never", // Don't reveal the terminal
+              "echo": false,     // Don't show the command in the output
+              "focus": false,    // Don't focus on the terminal
+              "panel": "shared"  // Use a shared terminal panel (optional)
+          }
       }
   ]
 }
