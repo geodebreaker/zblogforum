@@ -18,12 +18,20 @@ body {
   overflow: clip;
 }
 
+.clearsize {
+  font-size: 0;
+}
+
+.clearsize > * {
+  font-size: 20px;
+}
+
 .right {
   float: right;
   width: 50%;
 }
 
-ul>li {
+ul > li {
   border-radius: 10px;
   padding-left: 5px;
   width: 200px;
@@ -34,7 +42,7 @@ li.doing {
   background: #ff08;
 }
 
-li.check {
+li.done {
   text-decoration: line-through;
 }
 
@@ -44,6 +52,32 @@ h3 {
 
 a:visited {
   color: blue;
+}
+
+#n-count {
+  background: red;
+  color: white;
+  position: relative;
+  left: 180px;
+  font-family: monospace;
+  line-height: 19px;
+  vertical-align: baseline;
+  font-size: 15px;
+  height: 15px;
+  width: 15px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+  display: none;
+  margin: 0;
+}
+
+#untag {
+  color: white;
+  font-family: monospace;
+  font-size: 20px;
+  padding-right: 10px;
+  vertical-align: middle;
 }
 
 .mod {
@@ -58,6 +92,7 @@ a:visited {
   padding: 4px;
   display: inline-block;
   cursor: pointer;
+  user-select: none;
 }
 
 input {
@@ -88,14 +123,6 @@ textarea {
   width: 500px;
   height: 250px;
   resize: none;
-}
-
-.clearsize {
-  font-size: 0;
-}
-
-.clearsize > * {
-  font-size: 20px;
 }
 
 #header {
@@ -181,9 +208,11 @@ textarea {
 }
 
 #h-opts {
-  float: right;
-  vertical-align: middle;
+  position: absolute;
+  top: 10px;
+  right: 5px;
   cursor: pointer;
+  display: inline-block;
 }
 
 .h-opt {
@@ -198,7 +227,7 @@ textarea {
   min-height: 30px;
   text-wrap: wrap;
   padding: 5px;
-  background: #222;
+  background: #444;
   /*background-image: linear-gradient(to bottom, #aae, #66a);*/
   color: white;
   text-decoration: none;

@@ -20,11 +20,12 @@
       ZBlogForums
     </span>
     <span id="h-opts">
+      <span id="n-count">0</span>
       <span class="h-opt">R</span>
       <span class="h-opt">C</span>
       <span class="h-opt">F</span>
       <span class="h-opt">N</span>
-      <span class="h-opt">U</span>
+      <span class="h-opt"><span id="untag"></span>U</span>
     </span>
   </div>
   <div id="content">
@@ -46,6 +47,17 @@
   <a class="mod userlink" href="/@%user%">
     @%user%
   </a>
+  <div class="createpost clearsize mod">
+    %!reply{{<input class="cp-name" placeholder="Name">}}
+    <textarea class="cp-cont" placeholder="Content"></textarea>
+    %!reply{{<span class="button mkpost" onclick="mkpost()">Post</span>}}
+    %?reply{{<span class="button mkpost" onclick="reply('%reply%')">Reply</span>}}
+    %!reply{{<span class="button">Preview</span>}}
+    %!reply{{<span class="button" onclick="history.back()">Cancel</span>}}
+    %?reply{{<span class="button" onclick="switchrepl(true, '%reply%')">Cancel</span>}}
+    <div id="preview"></div>
+  </div>
 </body>
 
+<!-- %{createpost:{"reply":"h"}}% -->
 </html>

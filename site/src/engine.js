@@ -1,5 +1,6 @@
 $ = (x, y = document) => y.querySelector(x);
 var fetchonfocus = false;
+var un = '';
 
 function init() {
   window.onerror = alert;
@@ -12,13 +13,16 @@ function init() {
     }
   });
   $('#h-opts').onclick = e => {
-    if (e.target.classList.contains('h-opt')) {
-      switch (e.target.innerText) {
+    if (e.target.classList.contains('h-opt') || e.target.id == 'untag') {
+      switch (e.target.id == 'untag' ? 'U' : e.target.innerText.at(-1)) {
         case 'R':
           go();
           break;
         case 'C':
-          go('/create')
+          go('/create');
+          break;
+        case 'U':
+          if (un) go('/@' + un);
           break;
       }
     }
@@ -39,12 +43,16 @@ async function go(loc, stat) {
   }
   $('#content').innerHTML = "";
   $('title').innerText = c.title;
+  un = $('#untag').innerText = c.un ?? '';
+  $('#n-count').innerText = c.notif;
+  $('#n-count').style.display = c.notif ? 'inline-block' : 'none';
   switch (c.type) {
     case 'signin':
       setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
       break;
     case 'html':
-      $('#content').innerHTML = c.html;
+      $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/g,
+        (_, y, z) => module(y, JSON.parse(z)));
       break;
     case 'home':
       mkp_home(c)
@@ -76,8 +84,10 @@ function err(...e) {
 function module(name, inputs, nhtml) {
   var x = $('.mod.' + name).cloneNode(true);
   x.classList.remove('mod');
-  var h = x.outerHTML.replace(/%([a-z]{2,8})%/g, (x, y) => {
+  var h = x.outerHTML.replace(/%([a-z]{2,12})%/g, (x, y) => {
     return inputs[y] ?? x;
+  }).replace(/%\??(\!?)([a-z]{2,12}){{(.*?)}}/g, (_, x, y, z) => {
+    return (x ? !inputs[y] : inputs[y]) ? z : '';
   });
   if (nhtml) {
     var y = document.createElement('span');
@@ -117,18 +127,37 @@ function mkp_user(x) {
   })
 }
 
+const ADDREPLBTN = 
+  '<div id="addrepl" class="button" onclick="switchrepl(false, \'%\');">Add Reply</div>';
+
 function mkp_post(post) {
   $('#content').innerHTML = `
     ${module('userlink', { user: post.user })}
     <h3>${escapeHTML(post.name)}</h3>
     <div>${escapeHTML(post.data)}</div>
-    <hr>
-    <div id="addrepl" class="button" onclick="reply('${post.user}/${post.id}')">Add Reply</div>`;
+    <hr>` + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
 }
 
+function switchrepl(x, p) {
+  if (x) {
+    var x = document.createElement('span');
+    x.innerHTML = ADDREPLBTN.replace('%', p);
+    var y = $('.createpost:not(.mod)');
+    y.parentElement.insertBefore(x.children[0], y);
+    y.remove();
+  } else {
+    var y = $('#addrepl');
+    var x = module('createpost', { 'reply': p }, true);
+    y.parentElement.insertBefore(x, y);
+    x.children[0].focus();
+    y.remove();
+  }
+}
+
 function reply(pid) {
-  var x = prompt('');
+  var x = $('.cp-cont').value;
+  switchrepl(true, pid);
   if (x)
     net('reply', { p: pid, d: x }).then(x => mkrepl(x));
   else
@@ -198,6 +227,6 @@ function signin() {
 document.addEventListener('DOMContentLoaded', init);
 
 // JS is a dumb piece of fucking shit godamnit
-function isString(x){
+function isString(x) {
   return Object.getPrototypeOf(x).isPrototypeOf(new String(""));
 }
