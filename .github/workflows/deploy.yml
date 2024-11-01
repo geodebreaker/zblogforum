@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Ping discord 1
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"content":"Starting update..."}' $WEBHOOK_URL
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -42,8 +48,8 @@ jobs:
           yes | eb use "$EB_ENV_NAME"
           yes | eb deploy --staged
 
-      - name: Ping discord
+      - name: Ping discord 2
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
-          curl -X POST -H "Content-Type: application/json" -d '{"content":"Deployed to Elastic Beanstalk"}' $WEBHOOK_URL
+          curl -X POST -H "Content-Type: application/json" -d '{"content":"Updated code (<https://evrtdg.com>)"}' $WEBHOOK_URL
