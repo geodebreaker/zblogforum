@@ -127,15 +127,15 @@ function mkp_user(x) {
   })
 }
 
-const ADDREPLBTN = 
+const ADDREPLBTN =
   '<div id="addrepl" class="button" onclick="switchrepl(false, \'%\');">Add Reply</div>';
 
 function mkp_post(post) {
-  $('#content').innerHTML = `
-    ${module('userlink', { user: post.user })}
-    <h3>${escapeHTML(post.name)}</h3>
-    <div>${escapeHTML(post.data)}</div>
-    <hr>` + ADDREPLBTN.replace('%', post.user + '/' + post.id);
+  $('#content').innerHTML = module('post', {
+    user: module('userlink', { user: post.user }),
+    name: escapeHTML(post.name),
+    post: escapeHTML(post.data),
+  }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
 }
 
@@ -171,10 +171,10 @@ function escapeHTML(html) {
 }
 
 function mkrepl(r) {
-  $('#content').innerHTML += `
-    <hr>
-    ${module('userlink', { user: r.user })}
-    <div>${escapeHTML(r.data)}</div>`;
+  $('#content').innerHTML += module('post', {
+    user: module('userlink', { user: r.user }),
+    post: escapeHTML(r.data),
+  });
 }
 
 function mkpost() {

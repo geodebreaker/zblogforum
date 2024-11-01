@@ -125,6 +125,23 @@ textarea {
   resize: none;
 }
 
+.post {
+  display: block;
+  font-size: 25px;
+  border: 2px solid gray;
+  width: 500px;
+  min-height: 100px;
+  margin: 4px;
+  min-height: 30px;
+  text-wrap: wrap;
+  padding: 5px;
+  background: #444;
+}
+
+.post > hr {
+  border: 1px solid #888;
+}
+
 #header {
   z-index: 100;
   background: blue;
@@ -220,6 +237,7 @@ textarea {
 }
 
 .postslot {
+  margin: 4px;
   display: block;
   font-size: 25px;
   border: 2px solid gray;
@@ -228,9 +246,6 @@ textarea {
   text-wrap: wrap;
   padding: 5px;
   background: #444;
-  /*background-image: linear-gradient(to bottom, #aae, #66a);*/
-  color: white;
-  text-decoration: none;
   font-weight: bold;
   user-select: none;
   cursor: pointer;
