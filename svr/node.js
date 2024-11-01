@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const DEV = !process.env.AWS;
 
+process.on('uncaughtException', () => {  });
+
 const SQLCONFIG = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -169,7 +171,8 @@ async function api(res, url, params, auth, authrt) {
         return ret();
       var cont = content(params.q, un);
       cont.un = un;
-      cont.notif = 0;
+      if (un)
+        cont.notif = 2;
       ret(cont);
       break;
     case 'reply':
