@@ -14,9 +14,7 @@ conn.connect(e => {
   if (e)
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
-  setInterval(conn.query, 300e3, 'SELECT * FROM sutks', () => {
-    console.log('Keep Alive');
-  });
+  setInterval(fetchUsers, 550e3);
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -302,5 +300,4 @@ const AUTH = {};
 
 USERS = {};
 
-setInterval(() => fetchUsers(), 3600e3);
 fetchUsers();
