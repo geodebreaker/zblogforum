@@ -14,7 +14,7 @@ conn.connect(e => {
   if (e)
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
-  setInterval(fetchUsers, 550e3);
+  setInterval(fetchUsers, 300e3);
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -185,7 +185,7 @@ async function api(res, url, params, auth, authrt) {
     case 'create':
       if (!params.d || !params.n)
         return ret();
-      var newpost = { id: createId('r'), user: un, name: params.n, replies: [], data: params.d };
+      var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d };
       POSTS.push(newpost);
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
@@ -193,7 +193,7 @@ async function api(res, url, params, auth, authrt) {
       if (params.tk && !(await addUserIfSignup(params.tk, params.un, params.pw)))
         return ret({ fail: 'Invalid token' });
       if (!USERS[params.un])
-        return ret({ fail: 'User does not exist.' })
+        return ret({ fail: 'User does not exist.' });
       if (USERS[params.un].pw != params.pw)
         return ret({ fail: 'Invalid password.' });
       var atk = createId(null, 16);
