@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const DEV = !process.env.AWS;
 
-process.on('uncaughtException', () => {  });
+process.on('uncaughtException', () => { });
 
 const SQLCONFIG = {
   host: process.env.DB_HOST,
@@ -48,6 +48,7 @@ function fetchUsers() {
   return new Promise((y, n) => conn.query(sql, (err, res) => {
     if (err)
       return n(err);
+    console.log('Fetched users');
     USERS = Object.fromEntries(res.map(x => ([x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }])));
     y();
   }));
@@ -61,6 +62,7 @@ function mksutk(ttl, un = "") {
       console.log(err);
       return y(false);
     }
+    console.log('Made sign up token ("' + sutk + '"), for username "' + un + '", for ' + ttl + ' days');
     y(sutk);
   }));
 }
@@ -71,7 +73,7 @@ function mksutk(ttl, un = "") {
 
 function addUserIfSignup(tk, un, pw) {
   const sql = 'DELETE FROM sutks WHERE tk=? AND ttl>? AND (un="" OR un=?)';
-  return new Promise((y, n) => conn.query(sql, [tk, Date.now(), un], (err, res) => {
+  return new Promise(y => conn.query(sql, [tk, Date.now(), un], (err, res) => {
     if (err)
       return y(false);
     const sql = 'INSERT INTO users (un, pw) VALUES (?, ?)';
@@ -80,6 +82,15 @@ function addUserIfSignup(tk, un, pw) {
         if (err)
           return y(false);
         USERS[un] = { un, pw, id: res.insertId, perm: 0 };
+        console.log('New user created ("' + un + '") with code "' + tk + '"');
+        if (process.env.WEBHOOK)
+          fetch(process.env.WEBHOOK, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: 'New user created (`' + un + '`) with code `' + tk + '`'})
+          });
         y(true);
       });
     else
@@ -116,7 +127,7 @@ require('http').createServer(async (req, res) => {
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('500 Internal Server Error');
   }
-}).listen(8080);
+}).listen(8080, () => console.log('Server listening'));
 
 function src(res, url, auth) {
   try {
@@ -181,14 +192,14 @@ async function api(res, url, params, auth, authrt) {
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
       if (!post)
         return ret();
-      var newpost = { id: createId('r'), user: un, data: params.d };
+      var newpost = { id: createId('r'), user: un, data: params.d, time: Date.now() };
       post.replies.push(newpost);
       ret(newpost);
       break;
     case 'create':
       if (!params.d || !params.n)
         return ret();
-      var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d };
+      var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d, time: Date.now() };
       POSTS.push(newpost);
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
