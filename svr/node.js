@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const DEV = !process.env.AWS;
 
-process.on('uncaughtException', e => { console.error(e) });
+process.on('uncaughtException', e => console.error(e));
 
 const SQLCONFIG = {
   host: process.env.DB_HOST,
@@ -17,6 +17,7 @@ conn.connect(e => {
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
   setInterval(fetchDB, 300e3);
+  fetchDB();
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -57,24 +58,40 @@ function createPost(p) {
   }));
 }
 
+function createRepl(p) {
+  REPLS[p.id] = p;
+  POSTS.find(y => y.id == p.post).replies.push(p.id);
+  const sql = 'INSERT INTO repls (user, id, data, time, post) VALUES (?, ?, ?, ?, ?)';
+  return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.post], (err) => {
+    if (err) {
+      console.log(err);
+      return y(false);
+    }
+    console.log('Reply to post id "' + p.post + '" from "' + p.user + '" was created.');
+    y(true);
+  }));
+}
+
 function fetchDB() {
-  return new Promise((y, n) => {
-    var sql = 'SELECT * FROM users';
-    conn.query(sql, (err, res) => {
-      if (err)
-        return n(err);
-      console.log('Fetched users');
-      USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }]));
-      y();
-    });
-    sql = 'SELECT * FROM posts';
-    conn.query(sql, (err, res) => {
-      if (err)
-        return n(err);
-      console.log('Fetched posts');
-      POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
-      y();
-    });
+  console.log('Fetch and Keepalive --- ' + new Date().getMinutes())
+  var sql = 'SELECT * FROM users';
+  conn.query(sql, (err, res) => {
+    if (err)
+      return n(err);
+    USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }]));
+  });
+  sql = 'SELECT * FROM posts';
+  conn.query(sql, (err, res) => {
+    if (err)
+      return n(err);
+    POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
+  });
+  sql = 'SELECT * FROM repls';
+  conn.query(sql, (err, res) => {
+    if (err)
+      return n(err);
+    REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
+    res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
   });
 }
 
@@ -216,8 +233,8 @@ async function api(res, url, params, auth, authrt) {
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
       if (!post)
         return ret();
-      var newpost = { id: createId('r'), user: un, data: params.d, time: Date.now() };
-      post.replies.push(newpost);
+      var newpost = { id: createId('r'), user: un, data: params.d, time: Date.now(), post: post.id };
+      createRepl(newpost);
       ret(newpost);
       break;
     case 'create':
@@ -276,7 +293,8 @@ function content(ourl, un) {
   switch (type) {
     case '':
       var out = {
-        type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name }) => ({ user, id, name })).reverse(),
+        type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name, time }) => ({ user, id, name, time }))
+          .sort((a, b) => b.time - a.time),
         items: [
           ["Rules", "/rules"],
           ["Checklist", "/checklist"],
@@ -290,16 +308,16 @@ function content(ourl, un) {
     case 'user':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
-      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
+      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name, time }) => ({ user, id, name, time })).sort((a, b) => b.time - a.time);
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
     case 'post':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
-      var post = POSTS.find(x => x.id == url && x.user == user);
-      if (post)
+      var post = structuredClone(POSTS.find(x => x.id == url && x.user == user));
+      if (post) {
+        post.replies = post.replies.map(x => REPLS[x]);
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
-      else
-        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
+      } else return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
     case 'apanel':
       if (USERS[un].perm < 2)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
@@ -330,12 +348,12 @@ var POSTS = [
   // { user: createId('u'), id: createId('p'), name: 'ralseri', data: 'why.', replies: [] },
 ];
 
+var REPLS = [];
+
 function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZCVNM1234567890-_') {
   return (y ? y + ':' : '') + new Array(l).fill(0).map(() => x[Math.floor(Math.random() * x.length)]).join('')
 }
 
 const AUTH = {};
 
-USERS = {};
-
-fetchDB();
+var USERS = {};
