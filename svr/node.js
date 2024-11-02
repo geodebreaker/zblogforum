@@ -77,21 +77,21 @@ function fetchDB() {
   var sql = 'SELECT * FROM users';
   conn.query(sql, (err, res) => {
     if (err)
-      return n(err);
+      return;
     USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }]));
-  });
-  sql = 'SELECT * FROM posts';
-  conn.query(sql, (err, res) => {
-    if (err)
-      return n(err);
-    POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
-  });
-  sql = 'SELECT * FROM repls';
-  conn.query(sql, (err, res) => {
-    if (err)
-      return n(err);
-    REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
-    res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
+    sql = 'SELECT * FROM posts';
+    conn.query(sql, (err, res) => {
+      if (err)
+        return;
+      POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
+      sql = 'SELECT * FROM repls';
+      conn.query(sql, (err, res) => {
+        if (err)
+          return;
+        REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
+        res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
+      });
+    });
   });
 }
 
@@ -309,7 +309,10 @@ function content(ourl, un) {
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name, time }) => ({ user, id, name, time })).sort((a, b) => b.time - a.time);
-      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
+      var repls = Object.entries(REPLS).map(x => x[1])
+        .filter(x => x.user == user).map(({ post, time }) =>
+          ({ user: POSTS.find(x => x.id == post).user, name: POSTS.find(x => x.id == post).name, id: post, time })).sort((a, b) => b.time - a.time);
+      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls };
     case 'post':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
