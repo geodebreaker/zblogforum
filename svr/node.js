@@ -73,26 +73,30 @@ function createRepl(p) {
 }
 
 function fetchDB() {
-  console.log('Fetch and Keepalive --- ' + new Date().getMinutes())
+  console.log('Fetch and Keepalive --- ' + new Date().getMinutes());
   var sql = 'SELECT * FROM users';
-  conn.query(sql, (err, res) => {
-    if (err)
-      return;
-    USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }]));
-    sql = 'SELECT * FROM posts';
+  try {
     conn.query(sql, (err, res) => {
       if (err)
         return;
-      POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
-      sql = 'SELECT * FROM repls';
+      USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm, bio: x.bio, pfp: x.pfp }]));
+      sql = 'SELECT * FROM posts';
       conn.query(sql, (err, res) => {
         if (err)
           return;
-        REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
-        res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
+        POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
+        sql = 'SELECT * FROM repls';
+        conn.query(sql, (err, res) => {
+          if (err)
+            return;
+          REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
+          res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
+        });
       });
     });
-  });
+  } catch (e) {
+    conn.connect();
+  }
 }
 
 function mksutk(ttl, un = "") {
@@ -122,7 +126,7 @@ function addUserIfSignup(tk, un, pw) {
       conn.query(sql, [un, pw], (err, res) => {
         if (err)
           return y(false);
-        USERS[un] = { un, pw, id: res.insertId, perm: 0 };
+        USERS[un] = { un, pw, id: res.insertId, perm: 0, bio: 'Nothing here yet...', pfp: 'https://evrtdg.com/src/default.png' };
         console.log('New user created ("' + un + '") with code "' + tk + '"');
         if (process.env.WEBHOOK)
           fetch(process.env.WEBHOOK, {
@@ -150,6 +154,8 @@ require('http').createServer(async (req, res) => {
       type = 1;
     else if (type == 'api')
       type = 2;
+    else if (type == 'pfp')
+      type = 3;
     else
       type = 0;
   }
@@ -162,7 +168,12 @@ require('http').createServer(async (req, res) => {
   } else if (type == 1) {
     src(res, url, auth)
   } else if (type == 2) {
-    api(res, url, params, auth, authrt)
+    api(res, url, params, auth, authrt);
+  } else if (type == 3) {
+    if (USERS[url]) {
+      res.writeHead(302, { 'Location': USERS[url].pfp });
+      res.end();
+    }
   } else {
     console.log(auth ? auth[0] + ':' : '', 'NCF 500:', url);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -266,6 +277,12 @@ async function api(res, url, params, auth, authrt) {
       else
         ret({ fail: 'not enough permission' });
       break;
+    case 'edituser':
+      if (!params.b || !params.p)
+        return ret();
+      editUser(un, params.b, params.p)
+      ret({});
+      break;
     default:
       ret();
       break;
@@ -297,22 +314,24 @@ function content(ourl, un) {
           .sort((a, b) => b.time - a.time),
         items: [
           ["Rules", "/rules"],
+          ["Guide", "/guide"],
           ["Checklist", "/checklist"],
           ["\n", ""],
           ["Sign Out", "/signout"],
         ]
       };
       if (USERS[un].perm > 2)
-        out.items = insertArray(out.items, 2, ["\n", ""], ["Admin panel", "/apanel"])
+        out.items = insertArray(out.items, 3, ["\n", ""], ["Admin panel", "/apanel"])
       return out;
     case 'user':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name, time }) => ({ user, id, name, time })).sort((a, b) => b.time - a.time);
       var repls = Object.entries(REPLS).map(x => x[1])
-        .filter(x => x.user == user).map(({ post, time }) =>
-          ({ user: POSTS.find(x => x.id == post).user, name: POSTS.find(x => x.id == post).name, id: post, time })).sort((a, b) => b.time - a.time);
-      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls };
+        .filter(x => x.user == user).map(({ post, data, time }) =>
+          ({ user: POSTS.find(x => x.id == post).user, data, name: POSTS.find(x => x.id == post).name, id: post, time }))
+        .sort((a, b) => b.time - a.time);
+      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls, bio: USERS[user].bio };
     case 'post':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
@@ -325,6 +344,7 @@ function content(ourl, un) {
       if (USERS[un].perm < 2)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
     case 'rules':
+    case 'guide':
     case 'create':
     case 'signin':
     case 'checklist':

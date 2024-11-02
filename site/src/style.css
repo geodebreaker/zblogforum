@@ -59,6 +59,14 @@ a, a:visited {
   font-weight: bold !important;
 }
 
+.pfp {
+  border-radius: 15px;
+  width: 15px;
+  height: 15px;
+  vertical-align: middle;
+  padding-right: 5px;
+}
+
 #n-count {
   background: red;
   color: white;
@@ -128,6 +136,12 @@ textarea {
   width: calc(100% - 25px);
   height: 250px;
   resize: none;
+}
+
+.ps-desc {
+  font-size: 20px;
+  color: #aaa;
+  margin: 0px;
 }
 
 .post {
