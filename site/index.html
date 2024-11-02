@@ -42,13 +42,15 @@
 
   <div class="mod postslot" onclick="if(event.target.tagName!='A')go('%site%')">
     %name%
-    %?user{{
+    %?desc{{
+    <br><span class="ps-desc">%desc%</span>
+    }}%?user{{
     <br>
     %{userlink:{"user":"%user%"}}%
     }}
   </div>
   <a class="mod userlink" href="/@%user%">
-    @%user%
+    <img class="pfp" src="/pfp/%user%">@%user%
   </a>
   <div class="createpost clearsize mod">
     %!reply{{<input class="cp-name" placeholder="Name">}}

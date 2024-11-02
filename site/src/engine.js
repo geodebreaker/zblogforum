@@ -122,7 +122,11 @@ function mkp_home(x) {
 }
 
 function mkp_user(x) {
-  $('#content').innerHTML = `<h3>@${x.user}</h3><hr><h3>Posts:</h3>` +
+  $('#content').innerHTML = `
+    <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}</h3>
+    <div>${escapeHTML(x.bio)}</div>
+    <hr>
+    <h3>Posts:</h3>` +
     x.posts.map(y =>
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
@@ -130,10 +134,11 @@ function mkp_user(x) {
         user: ''
       })
     ).join('') + '<h3>Replies:</h3>' +
-    x.posts.map(y =>
+    x.repls.map(y =>
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
+        desc: escapeHTML(y.data.split('\n')[0].slice(0, 30)),
         user: y.user
       })
     ).join('')

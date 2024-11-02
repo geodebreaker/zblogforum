@@ -5,6 +5,7 @@
   .then(x => $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">generate sign up token</span><br>
 <span class="button" onclick="net('log').then(x => 
   $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">get logs</span><br>
+<span class="button" onclick="net('restart').then(() => location.reload())">get logs</span><br>
 <hr>
 Output:<br>
 <div id="ap-out"></div>
