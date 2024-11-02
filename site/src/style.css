@@ -106,7 +106,7 @@ input {
   font-family: monospace;
   font-size: 20px;
   outline: none;
-  width: 500px;
+  width: calc(100% - 25px);
 }
 
 textarea {
@@ -120,7 +120,7 @@ textarea {
   font-family: monospace;
   font-size: 20px;
   outline: none;
-  width: 500px;
+  width: calc(100% - 25px);
   height: 250px;
   resize: none;
 }
@@ -129,13 +129,15 @@ textarea {
   display: block;
   font-size: 25px;
   border: 2px solid gray;
-  width: 500px;
+  width: calc(100% - 25px);
   min-height: 100px;
   margin: 4px;
   min-height: 30px;
   text-wrap: wrap;
   padding: 5px;
   background: #444;
+  text-wrap: wrap;
+  overflow-wrap: break-word;
 }
 
 .post > hr {

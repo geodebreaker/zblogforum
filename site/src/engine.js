@@ -58,7 +58,7 @@ async function go(loc, stat) {
       setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
       break;
     case 'html':
-      $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/g,
+      $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/gs,
         (_, y, z) => module(y, JSON.parse(z)));
       break;
     case 'home':
@@ -91,11 +91,12 @@ function err(...e) {
 function module(name, inputs, nhtml) {
   var x = $('.mod.' + name).cloneNode(true);
   x.classList.remove('mod');
-  var h = x.outerHTML.replace(/%([a-z]{2,12})%/g, (x, y) => {
+  var h = x.outerHTML.replace(/%([a-z]{2,12}?)%/gs, (x, y) => {
     return inputs[y] ?? x;
-  }).replace(/%\??(\!?)([a-z]{2,12}){{(.*?)}}/g, (_, x, y, z) => {
-    return (x ? !inputs[y] : inputs[y]) ? z : '';
-  }).replace(/(?<!\\)%{(.{2,12}):({.*?})}%/g, (_, y, z) => module(y, JSON.parse(z)));
+  }).replace(/(?<!\\)%{([a-z]{2,12}?):({.*?})}%/gs, (_, y, z) => module(y, JSON.parse(z)))
+    .replace(/%\??(\!?)([a-z]{2,12}?){{(.*?)}}/gs, (_, x, y, z) => {
+      return (x ? !inputs[y] : inputs[y]) ? z : '';
+    });
   if (nhtml) {
     var y = document.createElement('span');
     y.innerHTML = h;
@@ -113,9 +114,7 @@ function mkp_home(x) {
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
-        user: module('userlink', {
-          user: y.user
-        })
+        user: y.user,
       }, true)
     );
   })
@@ -139,7 +138,7 @@ const ADDREPLBTN =
 
 function mkp_post(post) {
   $('#content').innerHTML = module('post', {
-    user: module('userlink', { user: post.user }),
+    user: post.user,
     name: escapeHTML(post.name),
     post: escapeHTML(post.data),
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
@@ -181,7 +180,7 @@ function escapeHTML(html) {
 
 function mkrepl(r) {
   $('#content').innerHTML += module('post', {
-    user: module('userlink', { user: r.user }),
+    user: r.user,
     post: escapeHTML(r.data),
   });
 }
