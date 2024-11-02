@@ -122,16 +122,21 @@ function mkp_home(x) {
 }
 
 function mkp_user(x) {
-  $('#content').innerHTML = `<h3>@${x.user}</h3><hr>`;
-  x.posts.map(y => {
-    $('#content').append(
+  $('#content').innerHTML = `<h3>@${x.user}</h3><hr><h3>Posts:</h3>` +
+    x.posts.map(y =>
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
         user: ''
-      }, true)
-    );
-  })
+      })
+    ).join('') + '<h3>Replies:</h3>' +
+    x.posts.map(y =>
+      module('postslot', {
+        site: '/@' + y.user + '/' + y.id,
+        name: escapeHTML(y.name),
+        user: y.user
+      })
+    ).join('')
 }
 
 const ADDREPLBTN =

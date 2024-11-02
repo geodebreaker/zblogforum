@@ -55,8 +55,8 @@ h3 {
 }
 
 a, a:visited {
-  color: #48f;
-  font-weight: bold;
+  color: #48f !important;
+  font-weight: bold !important;
 }
 
 #n-count {
