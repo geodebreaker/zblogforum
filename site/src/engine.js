@@ -60,6 +60,7 @@ async function go(loc, stat) {
     case 'html':
       $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/gs,
         (_, y, z) => module(y, JSON.parse(z)));
+      pauseupdate = true;
       break;
     case 'home':
       mkp_home(c)
@@ -141,6 +142,7 @@ function mkp_post(post) {
     user: post.user,
     name: escapeHTML(post.name),
     post: escapeHTML(post.data),
+    time: fmtDate(post.time),
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
 }
@@ -182,6 +184,7 @@ function mkrepl(r) {
   $('#content').innerHTML += module('post', {
     user: r.user,
     post: escapeHTML(r.data),
+    time: fmtDate(r.time),
   });
 }
 
@@ -196,7 +199,7 @@ function mkpost() {
 }
 
 async function net(url, dat, err) {
-  var c = await fetch('/api/' + url + '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&')).then(
+  var c = await fetch('/api/' + url + (dat ? '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&') : '')).then(
     r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
     e => ({ fail: 'Error occured: ' + e }));
   if (c.fail && err)
@@ -234,7 +237,19 @@ function signin() {
 
 document.addEventListener('DOMContentLoaded', init);
 
+function fmtDate(ms) {
+  var x = new Date(parseInt(ms));
+  var y = x.getHours() % 12;
+  var z = x.getMinutes().toString();
+  return `${x.getMonth() + 1}/${x.getDate()}/${x.getFullYear()} ` +
+    `${y == 0 ? 12 : y}:${z.length == 1 ? '0' + z : z} ${x.getHours() > 11 ? 'PM' : 'AM'}`;
+}
+
 // JS is a dumb piece of fucking shit godamnit
 function isString(x) {
-  return Object.getPrototypeOf(x).isPrototypeOf(new String(""));
+  try {
+    return Object.getPrototypeOf(x).isPrototypeOf(new String(""));
+  } catch (e) {
+    return true;
+  }
 }

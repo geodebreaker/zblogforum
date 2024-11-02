@@ -9,7 +9,7 @@
   ],
   "tasks": [
     {
-        "label": "autocommit",
+        "label": "autocommit", 
         "type": "shell",
         "command": "bash",
         "args": [

@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const DEV = !process.env.AWS;
 
-process.on('uncaughtException', () => { });
+process.on('uncaughtException', e => { console.error(e) });
 
 const SQLCONFIG = {
   host: process.env.DB_HOST,
@@ -16,7 +16,7 @@ conn.connect(e => {
   if (e)
     return console.error('Error connecting to the database:', e);
   console.log('Connected to MySQL');
-  setInterval(fetchUsers, 300e3);
+  setInterval(fetchDB, 300e3);
 });
 const URL = require('url').URL;
 const getfile = require('fs').readFileSync;
@@ -39,19 +39,43 @@ const extToMIME = {
   ttf: 'font/ttf',
   zip: 'application/zip',
 };
+
 function insertArray(a, i, ...x) {
   return [...a.slice(0, i), ...x, ...a.slice(i)];
 }
 
-function fetchUsers() {
-  const sql = 'SELECT * FROM users';
-  return new Promise((y, n) => conn.query(sql, (err, res) => {
-    if (err)
-      return n(err);
-    console.log('Fetched users');
-    USERS = Object.fromEntries(res.map(x => ([x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }])));
-    y();
+function createPost(p) {
+  POSTS.push(p);
+  const sql = 'INSERT INTO posts (user, id, data, time, name) VALUES (?, ?, ?, ?, ?)';
+  return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.name], (err) => {
+    if (err) {
+      console.log(err);
+      return y(false);
+    }
+    console.log('Post "' + p.name + '" from "' + p.user + '" was created.');
+    y(true);
   }));
+}
+
+function fetchDB() {
+  return new Promise((y, n) => {
+    var sql = 'SELECT * FROM users';
+    conn.query(sql, (err, res) => {
+      if (err)
+        return n(err);
+      console.log('Fetched users');
+      USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm }]));
+      y();
+    });
+    sql = 'SELECT * FROM posts';
+    conn.query(sql, (err, res) => {
+      if (err)
+        return n(err);
+      console.log('Fetched posts');
+      POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
+      y();
+    });
+  });
 }
 
 function mksutk(ttl, un = "") {
@@ -89,7 +113,7 @@ function addUserIfSignup(tk, un, pw) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ content: 'New user created (`' + un + '`) with code `' + tk + '`'})
+            body: JSON.stringify({ content: 'New user created (`' + un + '`) with code `' + tk + '`' })
           });
         y(true);
       });
@@ -200,7 +224,7 @@ async function api(res, url, params, auth, authrt) {
       if (!params.d || !params.n)
         return ret();
       var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d, time: Date.now() };
-      POSTS.push(newpost);
+      createPost(newpost);
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
@@ -265,17 +289,17 @@ function content(ourl, un) {
       return out;
     case 'user':
       if (!USERS[user])
-        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
+        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
       var posts = POSTS.filter(x => x.user == user).map(({ user, id, name }) => ({ user, id, name })).reverse();
       return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts };
     case 'post':
       if (!USERS[user])
-        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
+        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
       var post = POSTS.find(x => x.id == url && x.user == user);
       if (post)
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       else
-        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
+        return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
     case 'apanel':
       if (USERS[un].perm < 2)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
@@ -296,7 +320,7 @@ function content(ourl, un) {
   }
 }
 
-const POSTS = [
+var POSTS = [
   // { user: createId('u'), id: createId('p'), name: 'help oh god the darkness is coming (1)', data: 'g', replies: [] },
   // {
   //   user: createId('u'), id: createId('p'), name: 'patooie', data: 'patooie', replies: [{
@@ -314,4 +338,4 @@ const AUTH = {};
 
 USERS = {};
 
-fetchUsers();
+fetchDB();
