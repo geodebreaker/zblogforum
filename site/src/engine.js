@@ -107,6 +107,14 @@ function module(name, inputs, nhtml) {
   }
 }
 
+function edituser(x) {
+  $('#u-bio').style.display = x ? 'block' : 'none';
+  $('#edituser').style.display = x ? 'none' : 'block';
+  if (x) {
+    net('edituser', { b: $('#eu-bio').value, p: $('#eu-pfp').value }).then(() => go);
+  }
+}
+
 function mkp_home(x) {
   $('#content').innerHTML = `<div class="right"><h3>ZBlogForums</h3>by evrtdg<hr>${x.items.map(x =>
     x[0] == '\n' ? '<hr>' : '<a href="' + x[1] + '">' + x[0] + '</a>' + '<br>').join(' ')}</div>`;
@@ -124,7 +132,12 @@ function mkp_home(x) {
 function mkp_user(x) {
   $('#content').innerHTML = `
     <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}</h3>
-    <div>${escapeHTML(x.bio)}</div>
+    <div id="u-bio">${escapeHTML(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
+    <div id="edituser" style="display:none;">
+      <textarea placeholder="bio" id="eu-bio">${escapeHTML(x.bio)}</textarea>
+      <input id="eu-pfp" placeholder="link to pfp" value="${x.pfp}">
+      <span class="button" onclick="edituser(true)">Done</span> (You may need to reload to see new pfp)
+    </div>
     <hr>
     <h3>Posts:</h3>` +
     x.posts.map(y =>
@@ -144,8 +157,7 @@ function mkp_user(x) {
     ).join('')
 }
 
-const ADDREPLBTN =
-  '<div id="addrepl" class="button" onclick="switchrepl(false, \'%\');">Add Reply</div>';
+const ADDREPLBTN = '<div id="addrepl" class="button" onclick="switchrepl(false, \'%\');">Add Reply</div>';
 
 function mkp_post(post) {
   $('#content').innerHTML = module('post', {
