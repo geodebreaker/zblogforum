@@ -1,11 +1,17 @@
 $ = (x, y = document) => y.querySelector(x);
+$$ = (x, y = document) => y.querySelectorAll(x);
 var fetchonfocus = false;
+var pauseupdate = false;
 var un = '';
 
 function init() {
   window.onerror = alert;
   window.onfocus = () => { if (fetchonfocus) go() };
   window.onpopstate = e => new Promise(y => y(go(null, e.state)));
+  window.onkeydown = e => {
+    if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA')
+      pauseupdate = true;
+  }
   window.addEventListener('click', e => {
     if (e.target.tagName == 'A') {
       e.preventDefault();
@@ -33,6 +39,7 @@ function init() {
 }
 
 async function go(loc, stat) {
+  pauseupdate = false;
   if (loc && !stat)
     history.pushState({}, '', loc);
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
@@ -68,7 +75,7 @@ async function go(loc, stat) {
       break;
   }
   setTimeout(x => {
-    if (location.pathname == x) {
+    if (location.pathname == x && !pauseupdate) {
       if (document.hasFocus())
         go();
       else
@@ -88,7 +95,7 @@ function module(name, inputs, nhtml) {
     return inputs[y] ?? x;
   }).replace(/%\??(\!?)([a-z]{2,12}){{(.*?)}}/g, (_, x, y, z) => {
     return (x ? !inputs[y] : inputs[y]) ? z : '';
-  });
+  }).replace(/(?<!\\)%{(.{2,12}):({.*?})}%/g, (_, y, z) => module(y, JSON.parse(z)));
   if (nhtml) {
     var y = document.createElement('span');
     y.innerHTML = h;
@@ -141,12 +148,14 @@ function mkp_post(post) {
 
 function switchrepl(x, p) {
   if (x) {
+    pauseupdate = false;
     var x = document.createElement('span');
     x.innerHTML = ADDREPLBTN.replace('%', p);
     var y = $('.createpost:not(.mod)');
     y.parentElement.insertBefore(x.children[0], y);
     y.remove();
   } else {
+    pauseupdate = true;
     var y = $('#addrepl');
     var x = module('createpost', { 'reply': p }, true);
     y.parentElement.insertBefore(x, y);
