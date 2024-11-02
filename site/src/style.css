@@ -54,17 +54,31 @@ h3 {
   margin: 5px 0;
 }
 
-a, a:visited {
+a,
+a:visited {
   color: #48f !important;
   font-weight: bold !important;
 }
 
 .pfp {
-  border-radius: 25px;
-  width: 25px;
-  height: 25px;
+  border-radius: 30px;
+  width: 20px;
+  height: 20px;
   vertical-align: middle;
   margin-right: 5px;
+}
+
+h3>.pfp {
+  width: 30px;
+  height: 30px;
+}
+
+.eduser {
+  font-family: icon;
+  cursor: pointer;
+  user-select: none;
+  font-size: 30px;
+  vertical-align: bottom;
 }
 
 #n-count {

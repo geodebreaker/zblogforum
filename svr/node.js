@@ -72,6 +72,20 @@ function createRepl(p) {
   }));
 }
 
+function editUser(user, bio, pfp) {
+  USERS[user].bio = bio;
+  USERS[user].pfp = pfp;
+  const sql = 'UPDATE users SET bio=?, pfp=? WHERE un=?';
+  return new Promise((y, n) => conn.query(sql, [bio, pfp, user], (err) => {
+    if (err) {
+      console.log(err);
+      return y(false);
+    }
+    console.log('User "' + user + '" updated profile.');
+    y(true);
+  }));
+}
+
 function fetchDB() {
   console.log('Fetch and Keepalive --- ' + new Date().getMinutes());
   var sql = 'SELECT * FROM users';
@@ -331,7 +345,7 @@ function content(ourl, un) {
         .filter(x => x.user == user).map(({ post, data, time }) =>
           ({ user: POSTS.find(x => x.id == post).user, data, name: POSTS.find(x => x.id == post).name, id: post, time }))
         .sort((a, b) => b.time - a.time);
-      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls, bio: USERS[user].bio };
+      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls, bio: USERS[user].bio, pfp: USERS[user].pfp };
     case 'post':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
