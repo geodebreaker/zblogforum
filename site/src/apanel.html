@@ -1,9 +1,10 @@
 <h3>Admin Panel</h3>
-<a onclick="go('/')" href="">Homepage</a>
+<a onclick="go('/')" href="#">Homepage</a>
 <hr>
-<span class="button" 
-  onclick="net('gensutk', { ttl: prompt('lasts until (days)'), un: prompt('username (optional)') ?? '' })
+<span class="button" onclick="net('gensutk', { ttl: prompt('lasts until (days)'), un: prompt('username (optional)') ?? '' })
   .then(x => $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">generate sign up token</span><br>
+<span class="button" onclick="net('log').then(x => 
+  $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">get logs</span><br>
 <hr>
 Output:<br>
 <div id="ap-out"></div>

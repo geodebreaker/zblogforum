@@ -22,8 +22,12 @@ body {
   font-size: 0;
 }
 
-.clearsize > * {
+.clearsize>* {
   font-size: 20px;
+}
+
+.fr {
+  float: right;
 }
 
 .right {
@@ -31,7 +35,7 @@ body {
   width: 50%;
 }
 
-ul > li {
+ul>li {
   border-radius: 10px;
   padding-left: 5px;
   width: 200px;
@@ -50,8 +54,9 @@ h3 {
   margin: 5px 0;
 }
 
-a:visited {
-  color: blue;
+a, a:visited {
+  color: #48f;
+  font-weight: bold;
 }
 
 #n-count {
@@ -131,7 +136,7 @@ textarea {
   border: 2px solid gray;
   width: calc(100% - 25px);
   min-height: 100px;
-  margin: 4px;
+  margin: 8px 4px;
   min-height: 30px;
   text-wrap: wrap;
   padding: 5px;
@@ -140,7 +145,7 @@ textarea {
   overflow-wrap: break-word;
 }
 
-.post > hr {
+.post>hr {
   border: 1px solid #888;
 }
 
