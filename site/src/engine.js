@@ -292,7 +292,7 @@ function isString(x) {
 // like actually
 
 function styleText(x) {
-  var x = styleEmote(escapeHTML(x)).split('');
+  var x = (styleEmote(escapeHTML(x)) + ' ').split('');
   var y = '';
   for (var c = ''; x.length > 0; c = x.shift()) {
     if (c == '\\')
@@ -314,6 +314,6 @@ function styleEmote(x) {
     var type = (Object.entries(emo).find(x => x[1].includes(name)) ?? [])[0]
     if(bs || !type)
       return og;
-    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote"/>`;
+    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote">`;
   });
 }

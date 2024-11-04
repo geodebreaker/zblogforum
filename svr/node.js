@@ -205,7 +205,24 @@ require('http').createServer(async (req, res) => {
   url = url.join('/');
   if (type == 0) {
     console.log(auth ? auth[0] + ':' : '', 'MAIN:', url);
-    var file = getfile('./site/index.html');
+    var file = getfile('./site/index.html').toString();
+    var tags;
+    var m = url.match(/(?<=^@).+?/);
+    if (m)
+      tags = {
+        title: '@' + m[0] + ' on ZBlogForums.',
+        description: 'Click here to see the user.',
+        image: '/pfp/' + m[0],
+      };
+    m = url.match(/(?<=^@).+?(?=\/p:....)/);
+    if (m)
+      tags = {
+        title: 'Post by @' + m[0] + ' on ZBF.',
+        description: 'Click here to view the post.',
+        image: '/pfp/' + m[0],
+      };
+    file.replace('<!-- INSERT TAGS -->',
+      Object.entries(tags ?? ogtags).map(x => `<meta property="og:${x[0]}" content="${x[1]}">`).join('\n'));
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(file);
   } else if (type == 1) {
@@ -431,3 +448,10 @@ function createId(y, l = 4, x = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZC
 const AUTH = {};
 
 var USERS = {};
+
+var ogtags = {
+  title: 'ZBlogForums',
+  description: 'A mix between a blog and a forum',
+  image: '/src/logo.png',
+  'image:type': 'image/png'
+};
