@@ -327,7 +327,7 @@ async function api(res, url, params, auth, authrt) {
     case 'delete':
       if (USERS[un].perm <= 1)
         return ret({ fail: 'not enough permission' });
-      if (!POSTS[params.p])
+      if (!POSTS.find(x => x.id == params.p))
         return ret();
       return ret(deletePost(params.p));
     default:
