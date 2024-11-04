@@ -207,19 +207,19 @@ require('http').createServer(async (req, res) => {
     console.log(auth ? auth[0] + ':' : '', 'MAIN:', url);
     var file = getfile('./site/index.html').toString();
     var tags;
-    var m = url.match(/(?<=^@).+?/);
-    if (m)
-      tags = {
-        title: '@' + m[0] + ' on ZBlogForums.',
-        description: 'Click here to see the user.',
-        image: '/pfp/' + m[0],
-      };
-    m = url.match(/(?<=^@).+?(?=\/p:....)/);
+    var m = url.match(/(?<=^@).+(?=\/p:....)/);
     if (m)
       tags = {
         title: 'Post by @' + m[0] + ' on ZBF.',
         description: 'Click here to view the post.',
-        image: '/pfp/' + m[0],
+        image: '/pfp/' + m[0]
+      };
+    m = url.match(/(?<=^@).+/);
+    if (m)
+      tags = {
+        title: '@' + m[0] + ' on ZBlogForums.',
+        description: 'Click here to see the user.',
+        image: '/pfp/' + m[0]
       };
     file = file.replace('<!-- INSERT TAGS -->',
       Object.entries(tags ?? ogtags).map(x => `<meta property="og:${x[0]}" content="${x[1]}">`).join('\n'));
