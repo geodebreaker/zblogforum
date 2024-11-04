@@ -39,9 +39,10 @@ function init() {
 }
 
 async function go(loc, stat) {
-  pauseupdate = false;
-  if (loc && !stat)
+  if (loc && !stat) {
+    pauseupdate = false;
     history.pushState({}, '', loc);
+  }
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
     var c = await net('content', { q: loc ?? location.pathname + location.search });
     history.replaceState({ ttl: Date.now(), stat: c }, '', location.pathname + location.search);
@@ -58,9 +59,9 @@ async function go(loc, stat) {
       setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
       break;
     case 'html':
+      pauseupdate = true;
       $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/gs,
         (_, y, z) => module(y, JSON.parse(z)));
-      pauseupdate = true;
       break;
     case 'home':
       mkp_home(c)

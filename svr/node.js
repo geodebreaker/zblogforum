@@ -45,6 +45,25 @@ function insertArray(a, i, ...x) {
   return [...a.slice(0, i), ...x, ...a.slice(i)];
 }
 
+function deletePost(p) {
+  POSTS.splice(POSTS.findIndex(x => x.id == p), 1);
+  Object.entries(REPLS).filter(x => x[1].post == p)[0].map(x => delete REPLS[x[0]]);
+  var sql = 'DELETE FROM repls WHERE post=?';
+  return new Promise(y => conn.query(sql, [p], (err) => {
+    if (err) {
+      return y(false);
+    }
+    sql = 'DELETE FROM posts WHERE id=?';
+    return new Promise(y => conn.query(sql, [p], (err) => {
+      if (err) {
+        return y(false);
+      }
+      console.log('Post id "' + p + '" was deleted.');
+      y(true);
+    }));
+  }));
+}
+
 function createPost(p) {
   POSTS.push(p);
   const sql = 'INSERT INTO posts (user, id, data, time, name) VALUES (?, ?, ?, ?, ?)';
@@ -298,11 +317,19 @@ async function api(res, url, params, auth, authrt) {
         ret({ fail: 'not enough permission' });
       break;
     case 'edituser':
+      if (params.u && USERS[un].perm <= 2)
+        return ret({ fail: 'not enough permission' });
       if (!params.b || !params.p)
         return ret();
-      editUser(un, params.b, params.p)
+      editUser(params.u ?? un, params.b, params.p)
       ret({});
       break;
+    case 'delete':
+      if (USERS[un].perm <= 1)
+        return ret({ fail: 'not enough permission' });
+      if (!POSTS[params.p])
+        return ret();
+      return ret(deletePost(params.p));
     default:
       ret();
       break;
