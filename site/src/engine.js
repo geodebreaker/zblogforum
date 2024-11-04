@@ -314,6 +314,6 @@ function styleEmote(x) {
     var type = (Object.entries(emo).find(x => x[1].includes(name)) ?? [])[0]
     if(bs || !type)
       return og;
-    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote">`;
+    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote"/>`;
   });
 }
