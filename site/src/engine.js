@@ -221,9 +221,10 @@ function mkpost() {
 }
 
 async function net(url, dat, err) {
-  var c = await fetch('/api/' + url + (dat ? '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&') : '')).then(
-    r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
-    e => ({ fail: 'Error occured: ' + e }));
+  var c = await fetch('/api/' + url, //+ (dat ? '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&') : ''),
+    dat ? { headers: { 'Content-Type': 'application/json' }, method: 'post', body: JSON.stringify(dat) } : undefined).then(
+      r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
+      e => ({ fail: 'Error occured: ' + e }));
   if (c.fail && err)
     err('Failed to fetch page content. Please reload.',
       (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
