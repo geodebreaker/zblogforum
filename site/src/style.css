@@ -26,8 +26,9 @@ body {
   font-size: 20px;
 }
 
-.fr {
+.date {
   float: right;
+  cursor: pointer;
 }
 
 .right {
@@ -58,6 +59,8 @@ a,
 a:visited {
   color: #48f !important;
   font-weight: bold !important;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .pfp {

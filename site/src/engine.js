@@ -153,7 +153,7 @@ function mkp_user(x) {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
         desc: escapeHTML(y.data.split('\n')[0].slice(0, 30)),
-        user: y.user
+        user: ''
       })
     ).join('')
 }
@@ -166,6 +166,7 @@ function mkp_post(post) {
     name: escapeHTML(post.name),
     post: escapeHTML(post.data),
     time: fmtDate(post.time),
+    id: post.id
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
 }
@@ -208,6 +209,7 @@ function mkrepl(r) {
     user: r.user,
     post: escapeHTML(r.data),
     time: fmtDate(r.time),
+    id: r.id,
   });
 }
 
@@ -219,6 +221,10 @@ function mkpost() {
     net('create', { d, n }).then(u => go(u.url));
   else
     err('You need to enter text to post.');
+}
+
+function postinfo(p) {
+  alert('POST INFO: ' + p)
 }
 
 async function net(url, dat, err) {
