@@ -47,7 +47,7 @@ function insertArray(a, i, ...x) {
 
 function deletePost(p) {
   POSTS.splice(POSTS.findIndex(x => x.id == p), 1);
-  Object.entries(REPLS).filter(x => x[1].post == p)[0].map(x => delete REPLS[x[0]]);
+  Object.entries(REPLS).filter(x => x[1].post == p).map(x => delete REPLS[x[0]]);
   var sql = 'DELETE FROM repls WHERE post=?';
   return new Promise(y => conn.query(sql, [p], (err) => {
     if (err) {
