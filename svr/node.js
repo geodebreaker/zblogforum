@@ -158,9 +158,15 @@ function addUserIfSignup(tk, un, pw) {
 }
 
 require('http').createServer(async (req, res) => {
+  var body = '';
+  req.on('data', chunk => body += chunk);
+  await new Promise(y => req.on('end', y));
   var authrt = ((req.headers.cookie ?? '').match(/(?<=AUTH_TOKEN=)[a-zA-Z0-9_-]{16}/g) ?? [])[0];
   var auth = AUTH[authrt];
-  var params = Object.fromEntries(new URL(req.url, 'http://a/').searchParams.entries());
+  if (req.method == 'GET')
+    var params = Object.fromEntries(new URL(req.url, 'http://a/').searchParams.entries());
+  else if (req.method == 'POST')
+    var params = JSON.parse(body);
   var url = req.url.replace(/^\//, '').replaceAll('//', '/').replace(/\?.+$/i, '').split('/');
   var type = url.length == 1 ? 0 : url.shift();
   if (!type == 0) {
