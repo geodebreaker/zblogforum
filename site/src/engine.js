@@ -135,7 +135,7 @@ function mkp_user(x) {
     <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}</h3>
     <div id="u-bio">${escapeHTML(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
     <div id="edituser" style="display:none;">
-      <textarea placeholder="bio" id="eu-bio">${escapeHTML(x.bio)}</textarea>
+      <textarea placeholder="bio" id="eu-bio">${escapeHTML(x.bio).replaceAll('<br>', '\n')}</textarea>
       <input id="eu-pfp" placeholder="link to pfp" value="${x.pfp}">
       <span class="button" onclick="edituser(true)">Done</span> (You may need to reload to see new pfp)
     </div>
@@ -164,7 +164,7 @@ function mkp_post(post) {
   $('#content').innerHTML = module('post', {
     user: post.user,
     name: escapeHTML(post.name),
-    post: escapeHTML(post.data),
+    post: styleText(post.data),
     time: fmtDate(post.time),
     id: post.id
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
@@ -204,10 +204,16 @@ function escapeHTML(html) {
   return x.innerHTML;
 }
 
+function unescapeHTML(text) {
+  var x = document.createElement('span');
+  x.innerHTML = text;
+  return x.innerText;
+}
+
 function mkrepl(r) {
   $('#content').innerHTML += module('post', {
     user: r.user,
-    post: escapeHTML(r.data),
+    post: styleText(r.data),
     time: fmtDate(r.time),
     id: r.id,
   });
@@ -282,4 +288,23 @@ function isString(x) {
   } catch (e) {
     return true;
   }
+}
+// like actually
+
+function styleText(x) {
+  return styleEmote(escapeHTML(x));
+}
+
+function styleEmote(x) {
+  const emo = {
+    jpg: [ "mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei" ],
+    png: [ "chair" ],
+    gif: [ "huh", "bigshot", "sad", "alarm" ],
+  };
+  return x.replace(/(\\?)(:(.{2,14}?):)/g, (_match, bs, og, name) => {
+    var type = (Object.entries(emo).find(x => x[1].includes(name)))[0]
+    if(bs || !type)
+      return og;
+    return `^p,https://evrtdg.com/src/emoji/${name}.${type},emote;`;
+  });
 }

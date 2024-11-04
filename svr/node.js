@@ -91,6 +91,10 @@ function createRepl(p) {
   }));
 }
 
+function search(q) {
+
+}
+
 function editUser(user, bio, pfp) {
   USERS[user].bio = bio;
   USERS[user].pfp = pfp;
