@@ -221,7 +221,7 @@ require('http').createServer(async (req, res) => {
         description: 'Click here to view the post.',
         image: '/pfp/' + m[0],
       };
-    file.replace('<!-- INSERT TAGS -->',
+    file = file.replace('<!-- INSERT TAGS -->',
       Object.entries(tags ?? ogtags).map(x => `<meta property="og:${x[0]}" content="${x[1]}">`).join('\n'));
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(file);
