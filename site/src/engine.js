@@ -292,7 +292,16 @@ function isString(x) {
 // like actually
 
 function styleText(x) {
-  return styleEmote(escapeHTML(x));
+  var x = styleEmote(escapeHTML(x)).split('');
+  var y = '';
+  for (var c = ''; x.length > 0; c = x.shift()) {
+    if (c == '\\')
+      y += c.shift();
+    else if (c == '')
+      y += '';
+    else y += c;
+  }
+  return y;
 }
 
 function styleEmote(x) {
@@ -302,9 +311,9 @@ function styleEmote(x) {
     gif: [ "huh", "bigshot", "sad", "alarm" ],
   };
   return x.replace(/(\\?)(:(.{2,14}?):)/g, (_match, bs, og, name) => {
-    var type = (Object.entries(emo).find(x => x[1].includes(name)))[0]
+    var type = (Object.entries(emo).find(x => x[1].includes(name)) ?? [])[0]
     if(bs || !type)
       return og;
-    return `^p,https://evrtdg.com/src/emoji/${name}.${type},emote;`;
+    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote">`;
   });
 }
