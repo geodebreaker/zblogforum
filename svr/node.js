@@ -327,12 +327,12 @@ async function api(res, url, params, auth, authrt) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
-      if (USERS[un].perm < -1)
-        return ret({ fail: 'banned. to appeal send an email to [yourproblem@' + process.env.SITE + ']' });
       if (params.tk && !(await addUserIfSignup(params.tk, params.un, params.pw)))
         return ret({ fail: 'Invalid token' });
       if (!USERS[params.un])
         return ret({ fail: 'User does not exist.' });
+      if (USERS[params.un].perm < -1)
+        return ret({ fail: 'banned. to appeal send an email to [yourproblem@' + process.env.SITE + ']' });
       if (USERS[params.un].pw != params.pw)
         return ret({ fail: 'Invalid password.' });
       var atk = createId(null, 16);
