@@ -55,6 +55,10 @@ h3 {
   margin: 5px 0;
 }
 
+.icon {
+  font-family: icon;
+}
+
 a,
 a:visited {
   color: #48f !important;
