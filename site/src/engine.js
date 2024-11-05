@@ -133,7 +133,7 @@ function mkp_home(x) {
 function mkp_user(x) {
   $('#content').innerHTML = `
     <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}</h3>
-    <div id="u-bio">${escapeHTML(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
+    <div id="u-bio">${styleText(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
     <div id="edituser" style="display:none;">
       <textarea placeholder="bio" id="eu-bio">${escapeHTML(x.bio).replaceAll('<br>', '\n')}</textarea>
       <input id="eu-pfp" placeholder="link to pfp" value="${x.pfp}">
@@ -291,29 +291,65 @@ function isString(x) {
 }
 // like actually
 
+function link(l, x) {
+  var u = new URL((l.startsWith('/') ? location.origin : l.startsWith('http') ? '' : 'https://') + l);
+  if (location.host == u.host)
+    go(u.pathname);
+  else if (confirm('Do you want to go to "' + u.href + '"?')) {
+    if (x)
+      location = l;
+    else {
+      var a = document.createElement('a');
+      a.href = l;
+      a.target = '_blank';
+      a.click();
+    }
+  }
+  return false;
+}
+
 function styleText(x) {
   var x = (styleEmote(escapeHTML(x)) + ' ').split('');
   var y = '';
+  var m = false;
+  var a = [''];
   for (var c = ''; x.length > 0; c = x.shift()) {
-    if (c == '\\')
-      y += c.shift();
-    else if (c == '')
-      y += '';
-    else y += c;
+    if (c == '\\') y += c.shift();
+    else if (c == '{' && m == false) {
+      m = true;
+      a = [''];
+    } else if (m == true) {
+      if (c == '}') {
+        m = false;
+        y += style(a.shift(), a);
+      } else if (c == ',') a.push('');
+      else a[a.length - 1] += c;
+    } else y += c;
   }
   return y;
 }
 
+function style(x, y) {
+  switch (x) {
+    case 'l':
+    case 'ls':
+      console.log(`link("${y[0]}", ${x == 'l'})`)
+      return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
+    default:
+      return '{' + x + ',' + y.join(',') + '}';
+  }
+}
+
 function styleEmote(x) {
   const emo = {
-    jpg: [ "mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei" ],
-    png: [ "chair" ],
-    gif: [ "huh", "bigshot", "sad", "alarm" ],
+    jpg: ["mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei"],
+    png: ["chair"],
+    gif: ["huh", "bigshot", "sad", "alarm"],
   };
   return x.replace(/(\\?)(:(.{2,14}?):)/g, (_match, bs, og, name) => {
-    var type = (Object.entries(emo).find(x => x[1].includes(name)) ?? [])[0]
-    if(bs || !type)
+    var type = (Object.entries(emo).find(x => x[1].includes(name)) ?? [])[0];
+    if (bs || !type)
       return og;
-    return `<img src="https://evrtdg.com/src/emoji/${name}.${type}" class="emote">`;
+    return `<img src="${location.origin}/src/emoji/${name}.${type}" class="emote">`;
   });
 }
