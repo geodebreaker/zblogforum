@@ -338,6 +338,8 @@ function style(x, y) {
     case 'l':
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
+    case 'p':
+      return `<img src="${y[0]}"` + (y[1] ? `width="${y[1]}" height="${y[1]??y[2]}">` : '') + '>';
     default:
       return '{' + x + ',' + y.join(',') + '}';
   }
