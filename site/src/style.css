@@ -64,8 +64,55 @@ a:visited {
 }
 
 .emote {
-  width: 50px;
-  height: 50px; 
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.emote:active {
+  position: absolute;
+  top: calc(50% - 100px);
+  left: calc(50% - 100px);
+  width: 200px;
+  height: 200px;
+}
+
+.perm {
+  border: 1px solid #000;
+  border-radius: 30px;
+  font-weight: normal;
+  margin-left: 8px;
+  line-height: 17px;
+  width: 15px;
+  height: 15px;
+  text-align-last: center;
+  font-size: 15px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.pb {
+  color: #f00;
+  border-color: #f00;
+}
+
+.p {
+  display: none;
+}
+
+.pv {
+  color: #0f0;
+  border-color: #0f0;
+}
+
+.pm {
+  color: #00f;
+  border-color: #00f;
+}
+
+.pa {
+  color: #ff0;
+  border-color: #ff0;
 }
 
 .pfp {
@@ -290,14 +337,6 @@ textarea {
   padding: 5px;
   background: #444;
   font-weight: bold;
-  user-select: none;
-  cursor: pointer;
-}
-
-.userlink {
-  font-size: 20px;
-  color: blue;
-  text-decoration: underline;
   user-select: none;
   cursor: pointer;
 }

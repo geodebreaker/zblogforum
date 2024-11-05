@@ -45,6 +45,10 @@ function insertArray(a, i, ...x) {
   return [...a.slice(0, i), ...x, ...a.slice(i)];
 }
 
+function combineObj(a, b) {
+  return Object.fromEntries(Object.entries(a).concat(Object.entries(b)));
+}
+
 function deletePost(p) {
   POSTS.splice(POSTS.findIndex(x => x.id == p), 1);
   Object.entries(REPLS).filter(x => x[1].post == p).map(x => delete REPLS[x[0]]);
@@ -233,6 +237,9 @@ require('http').createServer(async (req, res) => {
     if (USERS[url]) {
       res.writeHead(302, { 'Location': USERS[url].pfp });
       res.end();
+    } else {
+      res.writeHead(404);
+      res.end();
     }
   } else {
     console.log(auth ? auth[0] + ':' : '', 'NCF 500:', url);
@@ -299,6 +306,8 @@ async function api(res, url, params, auth, authrt) {
       ret(cont);
       break;
     case 'reply':
+      if (USERS[un].perm < 0)
+        return ret({ fail: 'banned. to appeal send an email to [myass@yourproblem.com]' });
       if (!params.p || !params.d)
         return ret();
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
@@ -309,6 +318,8 @@ async function api(res, url, params, auth, authrt) {
       ret(newpost);
       break;
     case 'create':
+      if (USERS[un].perm < 0)
+        return ret({ fail: 'banned. to appeal send an email to [yourproblem@' + process.env.SITE + ']' });
       if (!params.d || !params.n)
         return ret();
       var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d, time: Date.now() };
@@ -316,6 +327,8 @@ async function api(res, url, params, auth, authrt) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
+      if (USERS[un].perm < -1)
+        return ret({ fail: 'banned. to appeal send an email to [yourproblem@' + process.env.SITE + ']' });
       if (params.tk && !(await addUserIfSignup(params.tk, params.un, params.pw)))
         return ret({ fail: 'Invalid token' });
       if (!USERS[params.un])
@@ -378,8 +391,8 @@ function content(ourl, un) {
   switch (type) {
     case '':
       var out = {
-        type: 'home', title: 'ZBlogForums', posts: POSTS.map(({ user, id, name, time }) => ({ user, id, name, time }))
-          .sort((a, b) => b.time - a.time),
+        type: 'home', title: 'ZBlogForums', posts: POSTS
+          .map(({ user, id, name, time }) => ({ user, id, name, time, perm: (USERS[user] ?? {}).perm })).sort((a, b) => b.time - a.time),
         items: [
           ["Rules", "/rules"],
           ["Guide", "/guide"],
@@ -394,20 +407,25 @@ function content(ourl, un) {
     case 'user':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
-      var posts = POSTS.filter(x => x.user == user).map(({ user, id, name, time }) => ({ user, id, name, time })).sort((a, b) => b.time - a.time);
+      var posts = POSTS.filter(x => x.user == user)
+        .map(({ id, name, time }) => ({ id, name, time })).sort((a, b) => b.time - a.time);
       var repls = Object.entries(REPLS).map(x => x[1])
         .filter(x => x.user == user).map(({ post, data, time }) =>
           ({ user: POSTS.find(x => x.id == post).user, data, name: POSTS.find(x => x.id == post).name, id: post, time }))
         .sort((a, b) => b.time - a.time);
-      return { type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls, bio: USERS[user].bio, pfp: USERS[user].pfp };
+      return {
+        type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls,
+        bio: USERS[user].bio, pfp: USERS[user].pfp, perm: USERS[user].perm
+      };
     case 'post':
       if (!USERS[user])
-        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
+        return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
       var post = structuredClone(POSTS.find(x => x.id == url && x.user == user));
       if (post) {
-        post.replies = post.replies.map(x => REPLS[x]);
+        post.replies = post.replies.map(x => combineObj(REPLS[x], { perm: (USERS[REPLS[x].user] ?? {}).perm }));
+        post.perm = (USERS[user] ?? {}).perm;
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
-      } else return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
+      } else return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
     case 'apanel':
       if (USERS[un].perm < 2)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
