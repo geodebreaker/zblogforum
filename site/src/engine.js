@@ -125,7 +125,7 @@ function mkp_home(x) {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
         user: y.user,
-        perm: 'b vma'[y.perm + 1]
+        perm: 'b vma'[y.perm + 1] ?? ''
       }, true)
     );
   })

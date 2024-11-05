@@ -70,8 +70,8 @@ function deletePost(p) {
 
 function createPost(p) {
   POSTS.push(p);
-  const sql = 'INSERT INTO posts (user, id, data, time, name) VALUES (?, ?, ?, ?, ?)';
-  return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.name], (err) => {
+  const sql = 'INSERT INTO posts (user, id, data, time, name, interact) VALUES (?, ?, ?, ?, ?, ?)';
+  return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.name, p.interact], (err) => {
     if (err) {
       console.log(err);
       return y(false);
@@ -83,15 +83,24 @@ function createPost(p) {
 
 function createRepl(p) {
   REPLS[p.id] = p;
-  POSTS.find(y => y.id == p.post).replies.push(p.id);
+  var post = POSTS.find(y => y.id == p.post);
+  post.replies.push(p.id);
+  post.interact = Date.now();
   const sql = 'INSERT INTO repls (user, id, data, time, post) VALUES (?, ?, ?, ?, ?)';
-  return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.post], (err) => {
+  return new Promise(y => conn.query(sql, [p.user, p.id, p.data, p.time, p.post], (err) => {
     if (err) {
       console.log(err);
       return y(false);
     }
-    console.log('Reply to post id "' + p.post + '" from "' + p.user + '" was created.');
-    y(true);
+    const sql = 'UPDATE posts SET interact=? WHERE id=?';
+    conn.query(sql, [post.interact, p.post], (err) => {
+      if (err) {
+        console.log(err);
+        return y(false);
+      }
+      console.log('Reply to post "' + post.name + '" from "' + p.user + '" was created.');
+      y(true);
+    });
   }));
 }
 
@@ -125,7 +134,7 @@ function fetchDB() {
       conn.query(sql, (err, res) => {
         if (err)
           return;
-        POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, replies: [] }));
+        POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, interact: x.interact, replies: [] }));
         sql = 'SELECT * FROM repls';
         conn.query(sql, (err, res) => {
           if (err)
@@ -323,6 +332,7 @@ async function api(res, url, params, auth, authrt) {
       if (!params.d || !params.n)
         return ret();
       var newpost = { id: createId('p'), user: un, name: params.n, replies: [], data: params.d, time: Date.now() };
+      newpost.interact = newpost.time;
       createPost(newpost);
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
@@ -392,7 +402,8 @@ function content(ourl, un) {
     case '':
       var out = {
         type: 'home', title: 'ZBlogForums', posts: POSTS
-          .map(({ user, id, name, time }) => ({ user, id, name, time, perm: (USERS[user] ?? {}).perm })).sort((a, b) => b.time - a.time),
+          .map(({ user, id, name, time, interact }) => ({ user, id, name, time, interact, perm: (USERS[user] ?? {}).perm }))
+          .sort((a, b) => b.interact - a.interact),
         items: [
           ["Rules", "/rules"],
           ["Guide", "/guide"],
@@ -408,7 +419,7 @@ function content(ourl, un) {
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
       var posts = POSTS.filter(x => x.user == user)
-        .map(({ id, name, time }) => ({ id, name, time })).sort((a, b) => b.time - a.time);
+        .map(({ id, name, time, interact }) => ({ id, name, time, interact })).sort((a, b) => b.interact - a.interact);
       var repls = Object.entries(REPLS).map(x => x[1])
         .filter(x => x.user == user).map(({ post, data, time }) =>
           ({ user: POSTS.find(x => x.id == post).user, data, name: POSTS.find(x => x.id == post).name, id: post, time }))
