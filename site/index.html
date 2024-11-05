@@ -43,12 +43,12 @@
     <br><span class="ps-desc">%desc%</span>
     }}%?user{{
     <br>
-    %{userlink:{"user":"%user%"}}%
+    %{userlink:{"user":"%user%","perm":"%perm%"}}%
     }}
   </div>
-  <a class="mod userlink" href="/@%user%">
-    <img class="pfp" src="/pfp/%user%">@%user%
-  </a>
+  <span class="mod userlink">
+    <a href="/@%user%"><img class="pfp" src="/pfp/%user%">@%user%</a><span class="perm p%perm%">%perm%</span>
+  </span>
   <div class="createpost clearsize mod">
     %!reply{{<input class="cp-name" placeholder="Name">}}
     <textarea class="cp-cont" placeholder="Content"></textarea>
@@ -60,7 +60,7 @@
     <div id="preview"></div>
   </div>
   <div class="mod post">
-    %{userlink:{"user":"%user%"}}%<div class="date" onclick="postinfo('%id%')">%time%</div><br>
+    %{userlink:{"user":"%user%","perm":"%perm%"}}%<div class="date" onclick="postinfo('%id%')">%time%</div><br>
     %?name{{
     <h3 class="p-name">%name%</h3>
     <hr>

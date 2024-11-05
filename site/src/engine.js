@@ -125,14 +125,16 @@ function mkp_home(x) {
         site: '/@' + y.user + '/' + y.id,
         name: escapeHTML(y.name),
         user: y.user,
+        perm: 'b vma'[y.perm + 1]
       }, true)
     );
   })
 }
 
 function mkp_user(x) {
+  var perm = 'b vma'[x.perm + 1];
   $('#content').innerHTML = `
-    <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}</h3>
+    <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}<span class="perm p${perm}">${perm}</span></h3>
     <div id="u-bio">${styleText(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
     <div id="edituser" style="display:none;">
       <textarea placeholder="bio" id="eu-bio">${escapeHTML(x.bio).replaceAll('<br>', '\n')}</textarea>
@@ -143,7 +145,7 @@ function mkp_user(x) {
     <h3>Posts:</h3>` +
     x.posts.map(y =>
       module('postslot', {
-        site: '/@' + y.user + '/' + y.id,
+        site: '/@' + x.user + '/' + y.id,
         name: escapeHTML(y.name),
         user: ''
       })
@@ -166,6 +168,7 @@ function mkp_post(post) {
     name: escapeHTML(post.name),
     post: styleText(post.data),
     time: fmtDate(post.time),
+    perm: 'b vma'[post.perm + 1],
     id: post.id
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
@@ -215,6 +218,7 @@ function mkrepl(r) {
     user: r.user,
     post: styleText(r.data),
     time: fmtDate(r.time),
+    perm: 'b vma'[r.perm + 1],
     id: r.id,
   });
 }
@@ -333,7 +337,6 @@ function style(x, y) {
   switch (x) {
     case 'l':
     case 'ls':
-      console.log(`link("${y[0]}", ${x == 'l'})`)
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
     default:
       return '{' + x + ',' + y.join(',') + '}';
