@@ -239,7 +239,7 @@ require('http').createServer(async (req, res) => {
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('500 Internal Server Error');
   }
-}).listen(8080, () => console.log('Server listening'));
+}).listen(process.env.PORT, () => console.log('Server listening'));
 
 function src(res, url, auth) {
   try {
