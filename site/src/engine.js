@@ -372,8 +372,8 @@ function style(x, y) {
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
     case 'p':
-      if (y[1] > 300) y[1] = 300;
-      if (y[2] > 300) y[2] = 300;
+      if (y[1] > 500) y[1] = 500;
+      if (y[2] > 500) y[2] = 500;
       return `<img src="${y[0]}" class="img"` + (y[1] ? `width="${y[1]}" height="${y[2] ?? y[1]}"` : '') + '>';
     default:
       return '{' + x + ',' + y.join(',') + '}';
