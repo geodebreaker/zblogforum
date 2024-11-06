@@ -349,9 +349,9 @@ function style(x, y) {
     case 's':
       return `<p class="style-${x}">`;
     case 'c':
-      return `<p style="color:${x.replaceAll(';', '')}">`;
+      return `<p style="color:${y[0].replaceAll(';', '')}">`;
     case 'h':
-      return `<p style="background-color:${x.replaceAll(';', '')}">`;
+      return `<p style="background-color:${y[0].replaceAll(';', '')}">`;
     case 'l':
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
