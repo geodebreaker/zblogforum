@@ -41,6 +41,7 @@ function init() {
 async function go(loc, stat) {
   if (loc && !stat) {
     pauseupdate = false;
+    $('#content').scrollTop = 0;
     history.pushState({}, '', loc);
   }
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
