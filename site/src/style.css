@@ -18,6 +18,13 @@ body {
   overflow: clip;
 }
 
+p { display: inline-block; }
+
+.style-b { font-weight: bold; }
+.style-i { font-style: italic; }
+.style-u { text-decoration: underline; }
+.style-s { text-decoration: line-through; }
+
 .clearsize {
   font-size: 0;
 }
