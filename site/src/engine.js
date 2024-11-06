@@ -6,7 +6,7 @@ var un = '';
 
 function init() {
   window.onerror = alert;
-  window.onfocus = () => { if (fetchonfocus) go() };
+  window.onfocus = () => { if (fetchonfocus && !pauseupdate) go() };
   window.onpopstate = e => new Promise(y => y(go(null, e.state)));
   window.onkeydown = e => {
     if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA')
@@ -370,7 +370,9 @@ function style(x, y) {
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
     case 'p':
-      return `<img src="${y[0]}"` + (y[1] ? `width="${y[1]}" height="${y[1] ?? y[2]}">` : '') + '>';
+      if (y[1] > 300) y[1] = 300;
+      if (y[2] > 300) y[2] = 300;
+      return `<img src="${y[0]}" class="img"` + (y[1] ? `width="${y[1]}" height="${y[2] ?? y[1]}"` : '') + '>';
     default:
       return '{' + x + ',' + y.join(',') + '}';
   }
