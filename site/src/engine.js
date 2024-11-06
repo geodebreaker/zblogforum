@@ -358,7 +358,7 @@ function styleText(z) {
 function style(x, y) {
   switch (x) {
     case '':
-      return '</p>';
+      return '</span>';
     case 'b':
     case 'i':
     case 'u':
