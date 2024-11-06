@@ -312,13 +312,19 @@ function link(l, x) {
   return false;
 }
 
-function styleText(x) {
-  var x = (styleEmote(escapeHTML(x)) + ' ').split('');
+function styleText(z) {
+  var x = escapeHTML(z);
+  try {
+    x = styleEmote(x);
+  } catch (e) {
+    console.error(e);
+  }
+  x = (x + ' ').split('')
   var y = '';
   var m = false;
   var a = [''];
   for (var c = ''; x.length > 0; c = x.shift()) {
-    if (c == '\\') y += c.shift();
+    if (c == '\\') y += x.shift();
     else if (c == '{' && m == false) {
       m = true;
       a = [''];
@@ -339,7 +345,7 @@ function style(x, y) {
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
     case 'p':
-      return `<img src="${y[0]}"` + (y[1] ? `width="${y[1]}" height="${y[1]??y[2]}">` : '') + '>';
+      return `<img src="${y[0]}"` + (y[1] ? `width="${y[1]}" height="${y[1] ?? y[2]}">` : '') + '>';
     default:
       return '{' + x + ',' + y.join(',') + '}';
   }
