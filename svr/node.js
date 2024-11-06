@@ -223,7 +223,7 @@ require('http').createServer(async (req, res) => {
     var file = getfile('./site/index.html').toString();
     var tags;
     var m = url.match(/(?<=@).+(?=\/p:....)/);
-    var mp = POSTS.find(x => x.id == m[0]);
+    if (m) var mp = POSTS.find(x => x.id == m[0]);
     if (m && mp)
       tags = {
         title: mp.name + ' - @' + m[0],

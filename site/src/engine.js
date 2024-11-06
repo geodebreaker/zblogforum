@@ -11,6 +11,8 @@ function init() {
   window.onkeydown = e => {
     if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA')
       pauseupdate = true;
+    if ((e.key == '`' || e.key == '~' || e.key == '/' || e.key == '?') && e.altKey && $('.mkpost'))
+      $('.mkpost').click();
   }
   window.addEventListener('click', e => {
     if (e.target.tagName == 'A') {
