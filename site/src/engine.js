@@ -121,7 +121,7 @@ function edituser(x) {
   $('#u-bio').style.display = x ? 'block' : 'none';
   $('#edituser').style.display = x ? 'none' : 'block';
   if (x) {
-    net('edituser', { b: $('#eu-bio').value, p: $('#eu-pfp').value }).then(() => go);
+    net('edituser', { b: $('#eu-bio').value, p: $('#eu-pfp').value }).then(() => go());
   }
 }
 
@@ -329,45 +329,46 @@ function link(l, x) {
 }
 
 function styleText(z) {
-  var x = escapeHTML(z);
+  var x = escapeHTML(z).replace(/(?<=^| )@[a-zA-Z0-9_-]{2,12}/g,
+    x => `{l,/${x},${x}}`);
   try {
     x = styleEmote(x);
   } catch (e) {
     console.error(e);
   }
-  x = (x + ' ').split('')
-  var y = '';
-  var m = false;
-  var a = [''];
+  x = (x + ' ').split('');
+  var y = [['']];
   for (var c = ''; x.length > 0; c = x.shift()) {
-    if (c == '\\') y += x.shift();
-    else if (c == '{' && m == false) {
-      m = true;
-      a = [''];
-    } else if (m == true) {
-      if (c == '}') {
-        m = false;
-        y += style(a.shift(), a);
-      } else if (c == ',') a.push('');
-      else a[a.length - 1] += c;
-    } else y += c;
+    var a = y[y.length - 1];
+    if (c == '\\') a[a.length] += x.shift();
+    else if (c == '{') y.push(['']);
+    else if (c == ',' && y.length > 1) a.push('');
+    else if (c == '}' && y.length > 1) {
+      var b = y.pop();
+      a = y[y.length - 1];
+      try {
+        a[a.length - 1] += style(b.shift(), b);
+      } catch (e) {
+        console.error(e);
+      }
+    } else a[a.length - 1] += c;
   }
-  return y;
+  return y[0][0];
 }
 
 function style(x, y) {
   switch (x) {
     case '':
-      return '</span>';
+      return '</span>'.repeat(y.length + 1);
     case 'b':
     case 'i':
     case 'u':
     case 's':
-      return `<span class="style ${x}">`;
+      y.unshift(x);
+      return y.map(x => 'bius'.split('').includes(x) ? `<span class="style ${x}">` : '').join('');
     case 'c':
-      return `<span class="style" style="color:${y[0].replaceAll(';', '')}">`;
     case 'h':
-      return `<span class="style" style="background-color:${y[0].replaceAll(';', '')}">`;
+      return `<span class="style" style="${x == 'h' ? 'background-' : ''}color:${y[0].replaceAll(';', '')}">`;
     case 'l':
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
