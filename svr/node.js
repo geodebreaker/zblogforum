@@ -171,7 +171,7 @@ function addUserIfSignup(tk, un, pw) {
   return new Promise(y => conn.query(sql, [tk, Date.now(), un], (err, res) => {
     if (err)
       return y(false);
-    const sql = 'INSERT INTO users (un, pw) VALUES (?, ?)';
+    const sql = 'INSERT INTO users (un, pw, bio, pfp) VALUES (?, ?, "Nothing here yet...", "https://evrtdg.com/src/default.png")';
     if (res.affectedRows > 0)
       conn.query(sql, [un, pw], (err, res) => {
         if (err)
@@ -223,19 +223,23 @@ require('http').createServer(async (req, res) => {
     var file = getfile('./site/index.html').toString();
     var tags;
     var m = url.match(/(?<=@).+(?=\/p:....)/);
-    if (m) tags = {
-      title: 'Post by @' + m[0] + ' on ZBF.',
-      description: 'Click here to view the post.',
-      image: '/pfp/' + m[0]
-    };
-    m = url.match(/(?<=@).+/);
-    if (m) tags = {
-      title: '@' + m[0] + ' on ZBlogForums.',
-      description: 'Click here to see the user.',
-      image: '/pfp/' + m[0]
-    };
+    var mp = POSTS.find(x => x.id == m[0]);
+    if (m && mp)
+      tags = {
+        title: mp.name + ' - @' + m[0],
+        description: mp.data.slice(0, 50),
+        image: '/pfp/' + m[0]
+      }; else {
+      m = url.match(/(?<=@).+/);
+      if (m && USERS[m]) tags = {
+        title: '@' + m[0] + ' on ZBlogForums.',
+        description: USERS[m].bio,
+        image: '/pfp/' + m[0]
+      };
+    }
     file = file.replace('<!-- INSERT TAGS -->',
-      Object.entries(tags ?? ogtags).map(x => `<meta property="og:${x[0]}" content="${x[1]}">`).join('\n'));
+      Object.entries(tags ?? ogtags).map(x =>
+        `<meta property="og:${x[0]}" content="${x[1].replace(/"|\\|\n/g, '')}">`).join('\n'));
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(file);
   } else if (type == 1) {
