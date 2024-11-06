@@ -363,11 +363,11 @@ function style(x, y) {
     case 'i':
     case 'u':
     case 's':
-      return `<p class="style-${x}">`;
+      return `<span class="style ${x}">`;
     case 'c':
-      return `<p style="color:${y[0].replaceAll(';', '')}">`;
+      return `<span class="style" style="color:${y[0].replaceAll(';', '')}">`;
     case 'h':
-      return `<p style="background-color:${y[0].replaceAll(';', '')}">`;
+      return `<span class="style" style="background-color:${y[0].replaceAll(';', '')}">`;
     case 'l':
     case 'ls':
       return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
