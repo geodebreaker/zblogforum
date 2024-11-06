@@ -57,12 +57,18 @@ async function go(loc, stat) {
   $('#n-count').style.display = c.notif ? 'inline-block' : 'none';
   switch (c.type) {
     case 'signin':
-      setTimeout(go, 10, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
+      setTimeout(go, 0, '/signin?q=' + encodeURI(location.pathname == '/signout' ? '/' : location.pathname));
       break;
     case 'html':
       pauseupdate = true;
       $('#content').innerHTML = c.html.replace(/(?<!\\)%{(.{2,12}):({.*?})}%/gs,
         (_, y, z) => module(y, JSON.parse(z)));
+      if (location.pathname.startsWith('/signin')) {
+        var x = (
+          location.search.replace('?', '').split('&')
+            .find(x => x.startsWith('tk=')) ?? '').replace('tk=', '');
+        if (x) $('#sutk').value = x;
+      }
       break;
     case 'home':
       mkp_home(c)
@@ -268,12 +274,19 @@ function signin() {
   //     'numbers, and special chars';
   net('signin', { un, pw, tk }, false).then(
     () => {
-      go(decodeURI(location.search.split('=')[1] || '/'));
+      go((location.search.replace('?', '').split('&').find(x => x.startsWith('q=')) ?? '').replace('q=', '') || '/begin');
       $('#silog').innerText = '';
     }, e => {
       $('#silog').innerText = e;
     }
   )
+}
+
+function bulksutk() {
+  var ttl = prompt('lasts until (days)');
+  Promise.all(new Array(parseInt(prompt('num of keys')) || 0).fill(0)
+    .map(_ => net('gensutk', { ttl, un: '' })))
+    .then(x => $('#ap-out').innerText = x.map(y => location.origin + '/signin?tk=' + y).join('\n'))
 }
 
 document.addEventListener('DOMContentLoaded', init);

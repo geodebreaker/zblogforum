@@ -2,7 +2,8 @@
 <a onclick="go('/')">Homepage</a>
 <hr>
 <span class="button" onclick="net('gensutk', { ttl: prompt('lasts until (days)'), un: prompt('username (optional)') ?? '' })
-  .then(x => $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">generate sign up token</span><br>
+  .then(x => $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">generate sign up token</span>
+<span class="button" onclick="bulksutk()">generate sign up token (bulk)</span><br>
 <span class="button" onclick="net('log').then(x => 
   $('#ap-out').innerText = isString(x) ? x : JSON.stringify(x))">get logs</span><br>
 <span class="button" onclick="net('restart').then(() => location.reload())">restart</span><br>

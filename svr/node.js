@@ -415,6 +415,8 @@ function content(ourl, un) {
       if (USERS[un].perm > 2)
         out.items = insertArray(out.items, 3, ["\n", ""], ["Admin panel", "/apanel"])
       return out;
+    case 'me':
+      user = un;
     case 'user':
       if (!USERS[user])
         return { type: 'html', title: 'User not found', html: 'User not found<br><br><a onclick="go(\'/\')" href="#">Homepage</a>' };
@@ -441,6 +443,7 @@ function content(ourl, un) {
       if (USERS[un].perm < 2)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
     case 'rules':
+    case 'begin':
     case 'guide':
     case 'create':
     case 'signin':
