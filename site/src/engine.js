@@ -218,7 +218,7 @@ function mkrepl(r) {
     user: r.user,
     post: styleText(r.data),
     time: fmtDate(r.time),
-    perm: 'b vma'[r.perm + 1],
+    perm: 'b vma'[r.perm + 1] ?? '',
     id: r.id,
   });
 }
