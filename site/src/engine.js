@@ -311,16 +311,16 @@ function isString(x) {
 }
 // like actually
 
-function link(l, x) {
+function link(l, x, event) {
+  event.preventDefault();
   var u = new URL((l.startsWith('/') ? location.origin : l.startsWith('http') ? '' : 'https://') + l);
   if (location.host == u.host)
     go(u.pathname);
   else if (confirm('Do you want to go to "' + u.href + '"?')) {
-    if (x)
-      location = l;
+    if (x) location = u;
     else {
       var a = document.createElement('a');
-      a.href = l;
+      a.href = u.href;
       a.target = '_blank';
       a.click();
     }
@@ -371,7 +371,7 @@ function style(x, y) {
       return `<span class="style" style="${x == 'h' ? 'background-' : ''}color:${y[0].replaceAll(';', '')}">`;
     case 'l':
     case 'ls':
-      return `<a onclick="link('${y[0]}', ${x == 'ls'})" href="${y[0]}">${y[1] ?? y[0]}</a>`;
+      return `<a onclick="link('${y[0]}', ${x == 'ls'}, event)" href="${y[0]}">${y[1] ?? y[0]}</a>`;
     case 'p':
       if (y[1] > 500) y[1] = 500;
       if (y[2] > 500) y[2] = 500;
