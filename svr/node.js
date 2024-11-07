@@ -222,18 +222,19 @@ require('http').createServer(async (req, res) => {
     console.log(auth ? auth[0] + ':' : '', 'MAIN:', url);
     var file = getfile('./site/index.html').toString();
     var tags;
-    var m = url.match(/(?<=@).+(?=\/p:....)/);
+    var m = url.match(/(?<=@.+\/)p:..../);
     if (m) var mp = POSTS.find(x => x.id == m[0]);
-    if (m && mp)
+    if (m && mp) {
       tags = {
         title: mp.name + ' - @' + m[0],
-        description: mp.data.slice(0, 50),
+        description: mp.data.slice(0, 50).replace(/{.*?}/g, ''),
         image: '/pfp/' + m[0]
-      }; else {
+      } 
+    } else {
       m = url.match(/(?<=@).+/);
       if (m && USERS[m]) tags = {
         title: '@' + m[0] + ' on ZBlogForums.',
-        description: USERS[m].bio,
+        description: USERS[m].bio.replace(/{.*?}/g, ''),
         image: '/pfp/' + m[0]
       };
     }
