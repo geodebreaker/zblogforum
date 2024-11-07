@@ -149,16 +149,16 @@ function fetchDB() {
   }
 }
 
-function mksutk(ttl, un = "") {
-  var sutk = createId('sutk', 8);
-  const sql = 'INSERT INTO sutks (tk, ttl, un) VALUES (?, ?, ?)';
-  return new Promise((y, n) => conn.query(sql, [sutk, Date.now() + (ttl * 86400e3), un], (err) => {
+function mksutk(ttl, un = "", amt = 1) {
+  var sutks = new Array(amt).fill(0).map(_ => createId('sutk', 8));
+  const sql = 'INSERT INTO sutks (tk, ttl, un) VALUES (?)' + ', (?)'.repeat(amt - 1);
+  return new Promise(y => conn.query(sql, sutks.map(sutk => [sutk, Date.now() + (ttl * 86400e3), un]), (err) => {
     if (err) {
       console.log(err);
       return y(false);
     }
-    console.log('Made sign up token ("' + sutk + '"), for username "' + un + '", for ' + ttl + ' days');
-    y(sutk);
+    sutks.map(sutk => console.log('Made sign up token ("' + sutk + '"), for username "' + un + '", for ' + ttl + ' days'));
+    y(sutks);
   }));
 }
 
@@ -305,7 +305,7 @@ async function api(res, url, params, auth, authrt) {
       if (!params.ttl)
         return ret({ 'fail': 'ttl not specified' });
       if (USERS[un].perm > 2)
-        return ret(await mksutk(params.ttl, params.un));
+        return ret(await mksutk(params.ttl, params.un, params.amt));
       else
         ret({ 'fail': 'not enough permission' });
       break;
