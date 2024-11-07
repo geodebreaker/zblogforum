@@ -285,10 +285,10 @@ function signin() {
 }
 
 function bulksutk() {
-  var ttl = prompt('lasts until (days)');
-  Promise.all(new Array(parseInt(prompt('num of keys')) || 0).fill(0)
-    .map(_ => net('gensutk', { ttl, un: '' })))
-    .then(x => $('#ap-out').innerText = x.map(y => location.origin + '/signin?tk=' + y).join('\n'))
+  pauseupdate = true;
+  var amt = parseInt(prompt(''));
+  if (amt) net('gensutk', { ttl: prompt('lasts until (days)'), un: '', amt }).then(x => 
+    $('#ap-out').innerText = x.map(y => location.origin + '/signin?tk=' + y).join('\n'))
 }
 
 document.addEventListener('DOMContentLoaded', init);
