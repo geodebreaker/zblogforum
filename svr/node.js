@@ -226,7 +226,7 @@ require('http').createServer(async (req, res) => {
     if (m) var mp = POSTS.find(x => x.id == m[0]);
     if (m && mp) {
       tags = {
-        title: mp.name + ' - @' + m[0],
+        title: mp.name + ' - @' + mp.user,
         description: mp.data.replace(/{.*?}/g, '').slice(0, 150),
         image: '/pfp/' + m[0]
       } 
