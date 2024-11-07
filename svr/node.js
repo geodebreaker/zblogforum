@@ -227,7 +227,7 @@ require('http').createServer(async (req, res) => {
     if (m && mp) {
       tags = {
         title: mp.name + ' - @' + m[0],
-        description: mp.data.replace(/{.*?}/g, '').slice(0, 50),
+        description: mp.data.replace(/{.*?}/g, '').slice(0, 150),
         image: '/pfp/' + m[0]
       } 
     } else {
