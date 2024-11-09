@@ -25,6 +25,26 @@ body {
 .style.u { text-decoration: underline; }
 .style.s { text-decoration: line-through; }
 
+#new1 {
+  background: red;
+  border-radius: 2px;
+  font-size: 15px;
+  padding: 2px;
+  font-weight: bold;
+  margin: 2px 0px 4px 4px;
+  display: inline-block;
+  user-select: none;
+  cursor: pointer;
+}
+
+#new2 {
+  border: 1px solid red;
+  height: 0;
+  width: 380px;
+  margin-bottom: 3px;
+  display: inline-block;
+}
+
 .clearsize {
   font-size: 0;
 }

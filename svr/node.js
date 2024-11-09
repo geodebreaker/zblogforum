@@ -70,14 +70,22 @@ function deletePost(p) {
 
 function createPost(p) {
   POSTS.push(p);
+  USERS[p.user].since = p.time;
   const sql = 'INSERT INTO posts (user, id, data, time, name, interact) VALUES (?, ?, ?, ?, ?, ?)';
   return new Promise((y, n) => conn.query(sql, [p.user, p.id, p.data, p.time, p.name, p.interact], (err) => {
     if (err) {
       console.log(err);
       return y(false);
     }
-    console.log('Post "' + p.name + '" from "' + p.user + '" was created.');
-    y(true);
+    const sql = 'UPDATE users SET since=? WHERE un=?';
+    conn.query(sql, [p.time, p.user], (err) => {
+      if (err) {
+        console.log(err);
+        return y(false);
+      }
+      console.log('Post "' + p.name + '" from "' + p.user + '" was created.');
+      y(true);
+    });
   }));
 }
 
@@ -86,6 +94,7 @@ function createRepl(p) {
   var post = POSTS.find(y => y.id == p.post);
   post.replies.push(p.id);
   post.interact = Date.now();
+  USERS[p.user].since = p.time;
   const sql = 'INSERT INTO repls (user, id, data, time, post) VALUES (?, ?, ?, ?, ?)';
   return new Promise(y => conn.query(sql, [p.user, p.id, p.data, p.time, p.post], (err) => {
     if (err) {
@@ -98,8 +107,15 @@ function createRepl(p) {
         console.log(err);
         return y(false);
       }
-      console.log('Reply to post "' + post.name + '" from "' + p.user + '" was created.');
-      y(true);
+      const sql = 'UPDATE users SET since=? WHERE un=?';
+      conn.query(sql, [p.time, p.user], (err) => {
+        if (err) {
+          console.log(err);
+          return y(false);
+        }
+        console.log('Reply to post "' + post.name + '" from "' + p.user + '" was created.');
+        y(true);
+      });
     });
   }));
 }
@@ -129,17 +145,20 @@ function fetchDB() {
     conn.query(sql, (err, res) => {
       if (err)
         return;
-      USERS = Object.fromEntries(res.map(x => [x.un, { un: x.un, pw: x.pw, id: x.id, perm: x.perm, bio: x.bio, pfp: x.pfp }]));
+      USERS = Object.fromEntries(res.map(x => [x.un,
+      { un: x.un, pw: x.pw, id: x.id, perm: x.perm, bio: x.bio, pfp: x.pfp, since: x.since }]));
       sql = 'SELECT * FROM posts';
       conn.query(sql, (err, res) => {
         if (err)
           return;
-        POSTS = res.map(x => ({ user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, interact: x.interact, replies: [] }));
+        POSTS = res.map(x => (
+          { user: x.user, id: x.id, data: x.data, time: x.time, name: x.name, interact: x.interact, replies: [] }));
         sql = 'SELECT * FROM repls';
         conn.query(sql, (err, res) => {
           if (err)
             return;
-          REPLS = Object.fromEntries(res.map(x => [x.id, { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
+          REPLS = Object.fromEntries(res.map(x => [x.id,
+          { id: x.id, user: x.user, post: x.post, data: x.data, time: x.time }]));
           res.map(x => POSTS.find(y => y.id == x.post).replies.push(x.id));
         });
       });
@@ -171,12 +190,12 @@ function addUserIfSignup(tk, un, pw) {
   return new Promise(y => conn.query(sql, [tk, Date.now(), un], (err, res) => {
     if (err)
       return y(false);
-    const sql = 'INSERT INTO users (un, pw, bio, pfp) VALUES (?, ?, "Nothing here yet...", "https://evrtdg.com/src/default.png")';
+    const sql = 'INSERT INTO users (un, pw, bio, pfp) VALUES (?, ?, "Nothing here yet...", "https://' + process.env.SITE + '/src/default.png")';
     if (res.affectedRows > 0)
       conn.query(sql, [un, pw], (err, res) => {
         if (err)
           return y(false);
-        USERS[un] = { un, pw, id: res.insertId, perm: 0, bio: 'Nothing here yet...', pfp: 'https://evrtdg.com/src/default.png' };
+        USERS[un] = { un, pw, id: res.insertId, perm: 0, bio: 'Nothing here yet...', pfp: 'https://' + process.env.SITE + '/src/default.png' };
         console.log('New user created ("' + un + '") with code "' + tk + '"');
         if (process.env.WEBHOOK)
           fetch(process.env.WEBHOOK, {
@@ -321,7 +340,7 @@ async function api(res, url, params, auth, authrt) {
       break;
     case 'reply':
       if (USERS[un].perm < 0)
-        return ret({ fail: 'banned. to appeal send an email to [myass@yourproblem.com]' });
+        return ret({ fail: 'banned. to appeal send an email to [yourproblem@' + process.env.SITE + ']' });
       if (!params.p || !params.d)
         return ret();
       var post = POSTS.find(x => params.p == x.user + '/' + x.id);
@@ -342,6 +361,8 @@ async function api(res, url, params, auth, authrt) {
       ret({ url: '/@' + newpost.user + '/' + newpost.id });
       break;
     case 'signin':
+      if (auth)
+        delete AUTH[authrt];
       if (params.tk && !(await addUserIfSignup(params.tk, params.un, params.pw)))
         return ret({ fail: 'Invalid token' });
       if (!USERS[params.un])
@@ -379,6 +400,17 @@ async function api(res, url, params, auth, authrt) {
       if (!POSTS.find(x => x.id == params.p))
         return ret();
       return ret(deletePost(params.p));
+    case 'clearnew':
+      USERS[un].since = Date.now();
+      const sql = 'UPDATE users SET since=? WHERE un=?';
+      conn.query(sql, [USERS[un].since, un], (err) => {
+        if (err) {
+          console.log(err);
+          return ret(false);
+        }
+        ret(true);
+      });
+      break;
     default:
       ret();
       break;
@@ -406,7 +438,7 @@ function content(ourl, un) {
   switch (type) {
     case '':
       var out = {
-        type: 'home', title: 'ZBlogForums', posts: POSTS
+        type: 'home', title: 'ZBlogForums', since: USERS[un].since, posts: POSTS
           .map(({ user, id, name, time, interact }) => ({ user, id, name, time, interact, perm: (USERS[user] ?? {}).perm }))
           .sort((a, b) => b.interact - a.interact),
         items: [

@@ -6,7 +6,7 @@ var un = '';
 
 function init() {
   window.onerror = alert;
-  window.onfocus = () => { if (fetchonfocus && !pauseupdate) go() };
+  window.onfocus = () => { if (fetchonfocus && !pauseupdate) go(), fetchonfocus = false };
   window.onpopstate = e => new Promise(y => y(go(null, e.state)));
   window.onkeydown = e => {
     if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA')
@@ -43,7 +43,6 @@ function init() {
 async function go(loc, stat) {
   if (loc && !stat) {
     pauseupdate = false;
-    $('#content').scrollTop = 0;
     history.pushState({}, '', loc);
   }
   if (!(stat && stat.ttl >= Date.now() - 60e3)) {
@@ -53,6 +52,8 @@ async function go(loc, stat) {
     c = stat.stat;
   }
   $('#content').innerHTML = "";
+  if (loc && !stat)
+    $('#content').scrollTop = 0;
   $('title').innerText = c.title;
   un = $('#untag').innerText = c.un ?? '';
   $('#n-count').innerText = c.notif;
@@ -128,16 +129,26 @@ function edituser(x) {
 function mkp_home(x) {
   $('#content').innerHTML = `<div class="right"><h3>ZBlogForums</h3>by evrtdg<hr>${x.items.map(x =>
     x[0] == '\n' ? '<hr>' : '<a href="' + x[1] + '">' + x[0] + '</a>' + '<br>').join(' ')}</div>`;
-  x.posts.map(y => {
+  var pu = false;
+  x.posts.map((y, i) => {
+    if (!pu && y.interact <= x.since) {
+      pu = true;
+      if (i != 0)
+        $('#content').innerHTML += '<span id="new1" onclick="clearnew(this)">new</span><span id="new2"></span>';
+    }
     $('#content').append(
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
-        name: escapeHTML(y.name),
+        name: styleEmote(y.name),
         user: y.user,
         perm: 'b vma'[y.perm + 1] ?? ''
       }, true)
     );
   })
+}
+
+function clearnew(o) {
+  net('clearnew').then(() => o.remove());
 }
 
 function mkp_user(x) {
@@ -155,14 +166,14 @@ function mkp_user(x) {
     x.posts.map(y =>
       module('postslot', {
         site: '/@' + x.user + '/' + y.id,
-        name: escapeHTML(y.name),
+        name: styleEmote(y.name),
         user: ''
       })
     ).join('') + '<h3>Replies:</h3>' +
     x.repls.map(y =>
       module('postslot', {
         site: '/@' + y.user + '/' + y.id,
-        name: escapeHTML(y.name),
+        name: styleEmote(y.name),
         desc: escapeHTML(y.data.split('\n')[0].slice(0, 30)),
         user: ''
       })
@@ -174,13 +185,22 @@ const ADDREPLBTN = '<div id="addrepl" class="button" onclick="switchrepl(false, 
 function mkp_post(post) {
   $('#content').innerHTML = module('post', {
     user: post.user,
-    name: escapeHTML(post.name),
+    name: styleEmote(post.name),
     post: styleText(post.data),
     time: fmtDate(post.time),
     perm: 'b vma'[post.perm + 1],
     id: post.id
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
+}
+
+function prevpost() {
+  $('.cp-prev').innerHTML = module('post', {
+    user: un,
+    name: styleEmote($('.cp-name').value),
+    post: styleText($('.cp-cont').value),
+    perm: '',
+  });
 }
 
 function switchrepl(x, p) {
@@ -246,16 +266,17 @@ function postinfo(p) {
   alert('POST INFO: ' + p)
 }
 
-async function net(url, dat, err) {
+async function net(url, dat, erra) {
   var c = await fetch('/api/' + url, //+ (dat ? '?' + Object.entries(dat).map(x => x[0] + '=' + encodeURI(x[1])).join('&') : ''),
     dat ? { headers: { 'Content-Type': 'application/json' }, method: 'post', body: JSON.stringify(dat) } : undefined).then(
       r => r.ok ? r.json() : { fail: ['Server provided response: ', r.text()] },
       e => ({ fail: 'Error occured: ' + e }));
-  if (c.fail && err)
-    err('Failed to fetch page content. Please reload.',
+  if (c.fail && !erra)
+    err(url == 'content' ? 'Failed to fetch page content. Please reload.' : '',
       (c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail));
   else if (c.fail)
     throw c.fail instanceof Array ? c.fail[0] + await c.fail[1] : c.fail;
+  console.log(url, dat, c);
   return c;
 }
 
@@ -274,7 +295,7 @@ function signin() {
   //   .map(x => x.test(pw) ? 1 : 0).reduce((a, b) => a + b) >= 3))
   //   return $('#silog').innerText = 'password must contain at least 3 of uppercase, lowercase, \n' +
   //     'numbers, and special chars';
-  net('signin', { un, pw, tk }, false).then(
+  net('signin', { un, pw, tk }, true).then(
     () => {
       go((location.search.replace('?', '').split('&').find(x => x.startsWith('q=')) ?? '').replace('q=', '') || '/begin');
       $('#silog').innerText = '';
@@ -287,7 +308,7 @@ function signin() {
 function bulksutk() {
   pauseupdate = true;
   var amt = parseInt(prompt(''));
-  if (amt) net('gensutk', { ttl: prompt('lasts until (days)'), un: '', amt }).then(x => 
+  if (amt) net('gensutk', { ttl: prompt('lasts until (days)'), un: '', amt }).then(x =>
     $('#ap-out').innerText = x.map(y => location.origin + '/signin?tk=' + y).join('\n'))
 }
 
@@ -329,14 +350,14 @@ function link(l, x, event) {
 }
 
 function styleText(z) {
-  var x = escapeHTML(z).replace(/(?<=^| )@[a-zA-Z0-9_-]{2,12}/g,
-    x => `{l,/${x},${x}}`);
+  var x = z;
   try {
     x = styleEmote(x);
   } catch (e) {
     console.error(e);
   }
-  x = (x + ' ').split('');
+  x = (x.replace(/(?<=^| )@[a-zA-Z0-9_-]{2,12}/g,
+    x => `{l,/${x},${x}}`) + ' ').split('');
   var y = [['']];
   for (var c = ''; x.length > 0; c = x.shift()) {
     var a = y[y.length - 1];
@@ -381,7 +402,8 @@ function style(x, y) {
   }
 }
 
-function styleEmote(x) {
+function styleEmote(xo) {
+  var x = escapeHTML(xo);
   const emo = {
     jpg: ["mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei", "mf", "cool"],
     png: ["chair"],
