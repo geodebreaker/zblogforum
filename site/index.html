@@ -67,6 +67,22 @@
     }}
     %post%
   </div>
+  <div id="pinfo" popover="auto"></div>
+  <div class="mod pinfo">
+    <span class="pi-close" onclick="$('#pinfo').hidePopover()">&times;</span>
+    <h3>Post info</h3>
+    <hr>
+    <span>Raw:</span><br>
+    <div class="code">%raw%</div>
+    %?mod{{
+    <hr>
+    <h3>Mod tools</h3>
+    <span class="button" onclick="deletePost('%id%', '%ispost%')">delete</span><br>
+    }}
+    %?admin{{
+    <span class="button" onclick="banUser('%id%')">ban user</span>
+    }}
+  </div>
 </body>
 
 </html>

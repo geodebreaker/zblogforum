@@ -91,6 +91,36 @@ h3 {
   font-family: icon;
 }
 
+#pinfo {
+  font-size: 20px;
+  border: 2px solid gray;
+  padding: 5px;
+  background: #444;
+  color: white;
+  width: 60%;
+  min-height: 30%;
+  max-height: 70%;
+}
+
+.pi-close {
+  font-size: 30px;
+  float: right;
+  color: red;
+  user-select: none;
+  cursor: pointer;
+  line-height: 25px;
+  font-weight: bold;
+}
+
+.code {
+  background: #222;
+  border: 2px solid gray;
+  font-size: 15px;
+  padding: 5px;
+  text-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
 a,
 a:visited {
   color: #48f !important;
@@ -254,13 +284,11 @@ textarea {
   font-size: 25px;
   border: 2px solid gray;
   width: calc(100% - 25px);
-  min-height: 100px;
+  min-height: 50px;
   margin: 8px 4px;
-  min-height: 30px;
   text-wrap: wrap;
   padding: 5px;
   background: #444;
-  text-wrap: wrap;
   overflow-wrap: break-word;
 }
 

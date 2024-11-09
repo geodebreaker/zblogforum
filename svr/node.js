@@ -68,6 +68,19 @@ function deletePost(p) {
   }));
 }
 
+function deleteRepl(r) {
+  var p = POSTS.find(x => x.id == REPLS[r].post);
+  p.replies.splice(p.replies.findIndex(x => x == r), 1);
+  delete REPLS[r];
+  var sql = 'DELETE FROM repls WHERE id=?';
+  return new Promise(y => conn.query(sql, [r], (err) => {
+    if (err) {
+      return y(false);
+    }
+    y(true);
+  }));
+}
+
 function createPost(p) {
   POSTS.push(p);
   USERS[p.user].since = p.time;
@@ -248,7 +261,7 @@ require('http').createServer(async (req, res) => {
         title: mp.name + ' - @' + mp.user,
         description: mp.data.replace(/{.*?}/g, '').slice(0, 150),
         image: '/pfp/' + m[0]
-      } 
+      }
     } else {
       m = url.match(/(?<=@).+/);
       if (m && USERS[m]) tags = {
@@ -336,6 +349,7 @@ async function api(res, url, params, auth, authrt) {
       cont.un = un;
       if (un)
         cont.notif = 2;
+      cont.perm = un ? USERS[un].perm : 0;
       ret(cont);
       break;
     case 'reply':
@@ -400,6 +414,12 @@ async function api(res, url, params, auth, authrt) {
       if (!POSTS.find(x => x.id == params.p))
         return ret();
       return ret(deletePost(params.p));
+    case 'deleterepl':
+      if (USERS[un].perm <= 1)
+        return ret({ fail: 'not enough permission' });
+      if (!REPLS[params.p])
+        return ret();
+      return ret(deleteRepl(params.p));
     case 'clearnew':
       USERS[un].since = Date.now();
       const sql = 'UPDATE users SET since=? WHERE un=?';
