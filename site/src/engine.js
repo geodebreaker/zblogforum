@@ -3,6 +3,9 @@ $$ = (x, y = document) => y.querySelectorAll(x);
 var fetchonfocus = false;
 var pauseupdate = false;
 var un = '';
+var perm;
+
+var raw = {};
 
 function init() {
   window.onerror = alert;
@@ -56,6 +59,7 @@ async function go(loc, stat) {
     $('#content').scrollTop = 0;
   $('title').innerText = c.title;
   un = $('#untag').innerText = c.un ?? '';
+  perm = c.perm ?? 0;
   $('#n-count').innerText = c.notif;
   $('#n-count').style.display = c.notif ? 'inline-block' : 'none';
   switch (c.type) {
@@ -134,7 +138,7 @@ function mkp_home(x) {
     if (!pu && y.interact <= x.since) {
       pu = true;
       if (i != 0)
-        $('#content').innerHTML += '<span id="new1" onclick="clearnew(this)">new</span><span id="new2"></span>';
+        $('#content').innerHTML += '<span><span id="new1" onclick="clearnew(this)">new</span><span id="new2"></span></span>';
     }
     $('#content').append(
       module('postslot', {
@@ -148,7 +152,7 @@ function mkp_home(x) {
 }
 
 function clearnew(o) {
-  net('clearnew').then(() => o.remove());
+  net('clearnew').then(() => o.parentElement.remove());
 }
 
 function mkp_user(x) {
@@ -183,6 +187,7 @@ function mkp_user(x) {
 const ADDREPLBTN = '<div id="addrepl" class="button" onclick="switchrepl(false, \'%\');">Add Reply</div>';
 
 function mkp_post(post) {
+  raw[post.id] = post.data;
   $('#content').innerHTML = module('post', {
     user: post.user,
     name: styleEmote(post.name),
@@ -243,6 +248,7 @@ function unescapeHTML(text) {
 }
 
 function mkrepl(r) {
+  raw[r.id] = r.data;
   $('#content').innerHTML += module('post', {
     user: r.user,
     post: styleText(r.data),
@@ -263,7 +269,19 @@ function mkpost() {
 }
 
 function postinfo(p) {
-  alert('POST INFO: ' + p)
+  $('#pinfo').innerHTML = module('pinfo', {
+    raw: escapeHTML(raw[p]),
+    ispost: p.startsWith('p'),
+    mod: perm > 1,
+    admin: perm > 2,
+    id: p,
+  }, true).innerHTML;
+  $('#pinfo').showPopover();
+}
+
+function deletePost(id, ispost) {
+  net('delete' + (ispost == 'true' ? '' : 'repl'), { p: id }).then(() => { if (ispost == 'true') go('/') });
+  $('#pinfo').hidePopover();
 }
 
 async function net(url, dat, erra) {
