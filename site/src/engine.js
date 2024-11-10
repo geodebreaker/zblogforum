@@ -336,8 +336,8 @@ function fmtDate(ms) {
   var x = new Date(parseInt(ms));
   var y = x.getHours() % 12;
   var z = x.getMinutes().toString();
-  return `${x.getMonth() + 1}/${x.getDate()}/${x.getFullYear()} ` +
-    `${y == 0 ? 12 : y}:${z.length == 1 ? '0' + z : z} ${x.getHours() > 11 ? 'PM' : 'AM'}`;
+  return `${x.getMonth() + 1}/${x.getDate()} ` +
+    `${y == 0 ? 12 : y}:${z.length == 1 ? '0' + z : z} ${x.getHours() > 11 ? 'PM' : 'AM'} ` + x.getFullYear().toString();
 }
 
 // JS is a dumb piece of fucking shit godamnit
