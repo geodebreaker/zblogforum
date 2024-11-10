@@ -404,3 +404,8 @@ textarea {
   user-select: none;
   cursor: pointer;
 }
+
+summary {
+  text-decoration: underline;
+  cursor: pointer;
+}
