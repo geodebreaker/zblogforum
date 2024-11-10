@@ -32,6 +32,9 @@ function init() {
         case 'C':
           go('/create');
           break;
+        case 'F':
+          go('/search');
+          break;
         case 'U':
           if (un) go('/@' + un);
           break;
@@ -145,7 +148,7 @@ function mkp_home(x) {
         site: '/@' + y.user + '/' + y.id,
         name: styleEmote(y.name),
         user: y.user,
-        perm: 'b vma'[y.perm + 1] ?? ''
+        perm: 'xx vbma'[y.perm + 2] ?? ''
       }, true)
     );
   })
@@ -156,7 +159,7 @@ function clearnew(o) {
 }
 
 function mkp_user(x) {
-  var perm = 'b vma'[x.perm + 1];
+  var perm = 'xx vbma'[x.perm + 2];
   $('#content').innerHTML = `
     <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}<span class="perm p${perm}">${perm}</span></h3>
     <div id="u-bio">${styleText(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
@@ -193,7 +196,7 @@ function mkp_post(post) {
     name: styleEmote(post.name),
     post: styleText(post.data),
     time: fmtDate(post.time),
-    perm: 'b vma'[post.perm + 1],
+    perm: 'xx vbma'[post.perm + 2],
     id: post.id
   }) + ADDREPLBTN.replace('%', post.user + '/' + post.id);
   post.replies.map(r => mkrepl(r));
@@ -253,7 +256,7 @@ function mkrepl(r) {
     user: r.user,
     post: styleText(r.data),
     time: fmtDate(r.time),
-    perm: 'b vma'[r.perm + 1] ?? '',
+    perm: 'xx vbma'[r.perm + 2] ?? '',
     id: r.id,
   });
 }
@@ -268,15 +271,31 @@ function mkpost() {
     err('You need to enter text to post.');
 }
 
-function postinfo(p) {
+function postinfo(p, user) {
   $('#pinfo').innerHTML = module('pinfo', {
     raw: escapeHTML(raw[p]),
     ispost: p.startsWith('p'),
-    mod: perm > 1,
-    admin: perm > 2,
+    mod: perm > 2,
+    admin: perm > 3,
     id: p,
+    user,
+    isuser: user == un && perm <= 2,
   }, true).innerHTML;
   $('#pinfo').showPopover();
+}
+
+function search(q) {
+  net('search', { q }).then(x => {
+    $('#s-con').innerHTML = x.length == 0 ? 'Nothing here...' : '';
+    x.map(y => $('#s-con').append(
+      module('postslot', {
+        site: '/@' + y.user + '/' + y.id,
+        name: styleEmote(y.name),
+        user: y.user,
+        perm: 'xx vbma'[y.perm + 2] ?? '',
+      }, true)
+    ))
+  });
 }
 
 function deletePost(id, ispost) {
@@ -416,7 +435,7 @@ function style(x, y) {
       if (y[2] > 500) y[2] = 500;
       return `<img src="${y[0]}" class="img"` + (y[1] ? `width="${y[1]}" height="${y[2] ?? y[1]}"` : '') + '>';
     case 't':
-      return `<details><summary>${y[1] ?? "Click to reveal"}</summary>${y[0] ?? ''}</details>`;
+      return `<details><summary>${y.shift()}</summary><span>${y.join(',')}</span></details>`;
     case 'f':
       return `<span style="font-family: ${y[0].replaceAll(';', '')}, monospace;" class="style">`;
     default:

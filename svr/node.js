@@ -134,7 +134,16 @@ function createRepl(p) {
 }
 
 function search(q) {
-
+  var x = POSTS.map(x => [(0 + x.name.includes(q) + x.data.includes(q) + x.user.includes(q)) * 5, x]);
+  x = x.concat(Object.values(REPLS).filter(x => 0 + x.data.includes(q) + x.user.includes(q) > 0)
+    .map(x => [1, POSTS.find(y => y.id == x.post)]));
+  x = x
+    .map((y, i) => x.findIndex(x => x[1] == y[1]) == i ? (x.find(z => z[1] == y[1])[0] += y[0], y) : y)
+    .filter(x => x[0] != 0)
+    .sort((a, b) => a[0] - b[0])
+    .filter((y, i, a) => a.findIndex(x => x[1] == y[1]) == i)
+    .map(x => x[1]);
+  return x.map(({ data, name, id, user }) => ({ data, name, id, user }));
 }
 
 function editUser(user, bio, pfp) {
@@ -329,7 +338,7 @@ async function api(res, url, params, auth, authrt) {
   var un = (auth ?? [])[0];
   switch (url) {
     case 'restart':
-      if (USERS[un].perm > 2)
+      if (USERS[un].perm > 3)
         process.exit();
       else
         ret({ 'fail': 'not enough permission' });
@@ -337,7 +346,7 @@ async function api(res, url, params, auth, authrt) {
     case 'gensutk':
       if (!params.ttl)
         return ret({ 'fail': 'ttl not specified' });
-      if (USERS[un].perm > 2)
+      if (USERS[un].perm > 3)
         return ret(await mksutk(params.ttl, params.un, params.amt));
       else
         ret({ 'fail': 'not enough permission' });
@@ -391,7 +400,7 @@ async function api(res, url, params, auth, authrt) {
       ret({});
       break;
     case 'log':
-      if (USERS[un].perm > 2)
+      if (USERS[un].perm > 3)
         try {
           ret(getfile('/var/log/web.stdout.log').toString().slice(-10000, -1));
         } catch (e) {
@@ -401,7 +410,7 @@ async function api(res, url, params, auth, authrt) {
         ret({ fail: 'not enough permission' });
       break;
     case 'edituser':
-      if (params.u && USERS[un].perm <= 2)
+      if (params.u && USERS[un].perm <= 3)
         return ret({ fail: 'not enough permission' });
       if (!params.b || !params.p)
         return ret();
@@ -409,16 +418,17 @@ async function api(res, url, params, auth, authrt) {
       ret({});
       break;
     case 'delete':
-      if (USERS[un].perm <= 1)
-        return ret({ fail: 'not enough permission' });
-      if (!POSTS.find(x => x.id == params.p))
+      var p = POSTS.find(x => x.id == params.p);
+      if (!p)
         return ret();
+      if (un != p.user && USERS[un].perm <= 2)
+        return ret({ fail: 'not enough permission' });
       return ret(deletePost(params.p));
     case 'deleterepl':
-      if (USERS[un].perm <= 1)
-        return ret({ fail: 'not enough permission' });
       if (!REPLS[params.p])
         return ret();
+      if (!REPLS[params.p].user != un && USERS[un].perm <= 2)
+        return ret({ fail: 'not enough permission' });
       return ret(deleteRepl(params.p));
     case 'clearnew':
       USERS[un].since = Date.now();
@@ -431,6 +441,8 @@ async function api(res, url, params, auth, authrt) {
         ret(true);
       });
       break;
+    case 'search':
+      return ret(search(params.q));
     default:
       ret();
       break;
@@ -469,7 +481,7 @@ function content(ourl, un) {
           ["Sign Out", "/signout"],
         ]
       };
-      if (USERS[un].perm > 2)
+      if (USERS[un].perm > 3)
         out.items = insertArray(out.items, 3, ["\n", ""], ["Admin panel", "/apanel"])
       return out;
     case 'me':
@@ -497,13 +509,14 @@ function content(ourl, un) {
         return { type: 'post', post, title: post.name + ' - ZBlogForums' };
       } else return { type: 'html', title: 'Post not found', html: 'Post not found<br><br><a onclick="go(\'/\')">Homepage</a>' };
     case 'apanel':
-      if (USERS[un].perm < 2)
+      if (USERS[un].perm < 3)
         return { fail: 'not enough permission', type: "html", html: "not enough permission", title: 'Error' };
     case 'rules':
     case 'begin':
     case 'guide':
     case 'create':
     case 'signin':
+    case 'search':
     case 'checklist':
       try {
         return { type: 'html', title: type + ' - ZBlogForums', html: getfile('./site/src/' + type + '.html').toString() };
