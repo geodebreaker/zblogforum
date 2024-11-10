@@ -416,7 +416,7 @@ function style(x, y) {
       if (y[2] > 500) y[2] = 500;
       return `<img src="${y[0]}" class="img"` + (y[1] ? `width="${y[1]}" height="${y[2] ?? y[1]}"` : '') + '>';
     case 't':
-      return `<details><summary>${y[1] ?? "Click to reveal"}</summary>${y[0]}`
+      return `<details><summary>${y[1] ?? "Click to reveal"}</summary>${y[0] ?? ''}</details>`
     default:
       return '{' + x + ',' + y.join(',') + '}';
   }
