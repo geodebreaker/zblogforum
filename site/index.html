@@ -60,7 +60,7 @@
   </div>
   <div class="mod post">
     %{userlink:{"user":"%user%","perm":"%perm%"}}%
-    %?time{{<div class="date" onclick="postinfo('%id%')">%time%</div>}}<br>
+    %?time{{<div class="date" onclick="postinfo('%id%', '%user%')">%time%</div>}}<br>
     %?name{{
     <h3 class="p-name">%name%</h3>
     <hr>
@@ -72,15 +72,19 @@
     <span class="pi-close" onclick="$('#pinfo').hidePopover()">&times;</span>
     <h3>Post info</h3>
     <hr>
+    <span>From: %user%</span>
     <span>Raw:</span><br>
     <div class="code">%raw%</div>
+    %?isuser{{
+    <span class="button" onclick="deletePost('%id%', '%ispost%')">delete</span><br>
+    }}
     %?mod{{
     <hr>
     <h3>Mod tools</h3>
     <span class="button" onclick="deletePost('%id%', '%ispost%')">delete</span><br>
     }}
     %?admin{{
-    <span class="button" onclick="banUser('%id%')">ban user</span>
+    <span class="button" onclick="banUser('%user%')">ban user</span>
     }}
   </div>
 </body>
