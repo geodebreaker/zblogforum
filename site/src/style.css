@@ -39,6 +39,18 @@ body {
   text-decoration: line-through;
 }
 
+.style.g {
+  font-size: 35px;
+}
+
+.style.r {
+  font-size: 25px;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: white;
+}
+
 #new1 {
   background: red;
   border-radius: 2px;
