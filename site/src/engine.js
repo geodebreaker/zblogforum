@@ -398,7 +398,7 @@ function styleText(z) {
   var y = [['']];
   for (var c = ''; x.length > 0; c = x.shift()) {
     var a = y[y.length - 1];
-    if (c == '\\') a[a.length] += x.shift();
+    if (c == '\\') a[a.length - 1] += x.shift();
     else if (c == '{') y.push(['']);
     else if (c == ',' && y.length > 1) a.push('');
     else if (c == '}' && y.length > 1) {
