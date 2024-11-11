@@ -140,7 +140,7 @@ function search(q) {
   x = x
     .map((y, i) => x.findIndex(x => x[1] == y[1]) == i ? (x.find(z => z[1] == y[1])[0] += y[0], y) : y)
     .filter(x => x[0] != 0)
-    .sort((a, b) => a[0] - b[0])
+    .sort((a, b) => b[0] - a[0])
     .filter((y, i, a) => a.findIndex(x => x[1] == y[1]) == i)
     .map(x => x[1]);
   return x.map(({ data, name, id, user }) => ({ data, name, id, user }));
