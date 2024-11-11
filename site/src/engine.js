@@ -422,8 +422,10 @@ function style(x, y) {
     case 'i':
     case 'u':
     case 's':
+    case 'g':
+    case 'r':
       y.unshift(x);
-      return y.map(x => 'bius'.split('').includes(x) ? `<span class="style ${x}">` : '').join('');
+      return y.map(x => 'biusgr'.split('').includes(x) ? `<span class="style ${x}">` : '').join('');
     case 'c':
     case 'h':
       return `<span class="style" style="${x == 'h' ? 'background-' : ''}color:${y[0].replaceAll(';', '')}">`;
