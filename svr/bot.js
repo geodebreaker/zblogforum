@@ -64,7 +64,7 @@ async function loop() {
 		a.shift();
 		if (c) a = a[c]; else a = a[0];
 		console.log('\x07did ' + z + (c ? ' #' + c : ''));
-		api('reply', { p: x.user + '/' + x.id, d: '{p,' + a.replace(',', '\\,') + ',300,300}' });
+		api('reply', { p: x.user + '/' + x.id, d: '{p,' + a.replaceAll(',', '\\,') + ',300,300}' });
 	});
 	if (x) api('clearnew');
 }
