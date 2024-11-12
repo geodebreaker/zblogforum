@@ -448,7 +448,7 @@ function style(x, y) {
 function styleEmote(xo) {
   var x = escapeHTML(xo);
   const emo = {
-    jpg: ["mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei", "mf", "cool"],
+    jpg: ["mood", "goober", "horror", "nohorror", "clueless", "silly", "roll", "mh", "moodenheimer", "panic", "ralsei", "mf", "cool", "hello"],
     png: ["chair"],
     gif: ["huh", "bigshot", "sad", "alarm"],
   };
