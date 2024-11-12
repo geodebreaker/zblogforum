@@ -497,7 +497,7 @@ function content(ourl, un) {
         .sort((a, b) => b.time - a.time);
       return {
         type: 'user', title: '@' + user + ' - ZBlogForums', user, posts, repls,
-        bio: USERS[user].bio, pfp: USERS[user].pfp, perm: USERS[user].perm
+        bio: USERS[user].bio, pfp: USERS[user].pfp, uperm: USERS[user].perm
       };
     case 'post':
       if (!USERS[user])

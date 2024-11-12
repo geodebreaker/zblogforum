@@ -159,7 +159,7 @@ function clearnew(o) {
 }
 
 function mkp_user(x) {
-  var perm = 'xx vbma'[x.perm + 2];
+  var perm = 'xx vbma'[x.uperm + 2];
   $('#content').innerHTML = `
     <h3><img class="pfp" src="/pfp/${x.user}">@${x.user}<span class="perm p${perm}">${perm}</span></h3>
     <div id="u-bio">${styleText(x.bio)}${x.user == un ? '<span class="eduser" onclick="edituser()">E</span>' : ''}</div>
