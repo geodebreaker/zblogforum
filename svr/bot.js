@@ -54,7 +54,7 @@ async function loop() {
 				.filter(x => x[1].startsWith('!ai ') || x[0] == un)
 				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] }));
 			try {
-				console.log('ai did ' + f.at(-1).from + ': ' + f.at(-1).data);
+				console.log('\x07ai did ' + f.at(-1).from + ': ' + f.at(-1).data);
 				e = await fetch(aiapi + encodeURI(prompt + JSON.stringify(f))).then(e => e.json());
 				api('reply', { p: x.user + '/' + x.id, d: '[AI] ' + e });
 			} catch (e) {
