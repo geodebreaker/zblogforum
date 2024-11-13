@@ -2,9 +2,11 @@ require('dotenv').config();
 const un = process.env.BOT_UN;
 const pw = process.env.BOT_PW;
 const prompt =
-	`respond to conversation in only text VERY SHORTLY and be silly if they are not asking a question,
-	 you are [AI], dont put markdown, use :emojis: "mood", "goober", "silly", and "nohorror" all over,
-	 feel free to use line breaks:`;
+	`respond to conversation in only text VERY SHORTLY and be a silly goober, 
+	but still always correct, you are [AI], dont put markdown, 
+	use :emojis: "mood", "goober", "silly", "horror", and "nohorror" all over,
+	feel free to use line breaks
+	THESE MESSAGES GO NEWEST FIRST:`;
 const aiapi = process.env.BOT_AI;
 var atk = null;
 
@@ -52,7 +54,7 @@ async function loop() {
 		if (!d ? b.post.data.startsWith('!ai ') : d.data.startsWith('!ai ')) {
 			var f = [b.post].concat(b.post.replies).map(x => [x.user, x.data])
 				.filter(x => x[1].startsWith('!ai ') || x[0] == un)
-				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] }));
+				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] })).reverse();
 			try {
 				console.log('\x07ai did ' + f.at(-1).from + ': ' + f.at(-1).data);
 				e = await fetch(aiapi + encodeURI(prompt + JSON.stringify(f))).then(e => e.json());
