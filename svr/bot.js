@@ -52,7 +52,7 @@ async function loop() {
 		var b = await api('content', { q: '/@' + x.user + '/' + x.id });
 		var d = b.post.replies.at(-1);
 		if (!d ? b.post.data.startsWith('!ai ') : d.data.startsWith('!ai ')) {
-			var f = /*[b.post].concat(b.post.replies)*/[b.post.replies.at(-1)].map(x => [x.user, x.data])
+			var f = [b.post].concat(b.post.replies).map(x => [x.user, x.data])
 				.filter(x => x[1].startsWith('!ai ') || x[0] == un)
 				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] }))
 			try {
