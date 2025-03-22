@@ -1,12 +1,12 @@
 require('dotenv').config();
 const un = process.env.BOT_UN;
 const pw = process.env.BOT_PW;
-const prompt =
+const prompt = (process.env.PROMPT ||
 	`respond to conversation in only text VERY SHORTLY and be a silly goober, 
 	but still always correct, you are [AI], dont put markdown, 
-	use :emojis: "mood", "goober", "silly", "horror", and "nohorror" all over,
-	feel free to use line breaks
-	THESE MESSAGES GO NEWEST FIRST:`;
+	use :emojis: "mood", "goober", "silly", "horror", and "nohorror" all over,`) +
+	`feel free to use line breaks
+	THESE ARE MESSAGES:`;
 const aiapi = process.env.BOT_AI;
 var atk = null;
 
@@ -52,12 +52,13 @@ async function loop() {
 		var b = await api('content', { q: '/@' + x.user + '/' + x.id });
 		var d = b.post.replies.at(-1);
 		if (!d ? b.post.data.startsWith('!ai ') : d.data.startsWith('!ai ')) {
-			var f = [b.post].concat(b.post.replies).map(x => [x.user, x.data])
+			var f = /*[b.post].concat(b.post.replies)*/[b.post.replies.at(-1)].map(x => [x.user, x.data])
 				.filter(x => x[1].startsWith('!ai ') || x[0] == un)
-				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] })).reverse();
+				.map(x => ({ from: x[0] == un ? '[AI]' : x[0], data: x[1] }))
 			try {
 				console.log('\x07ai did ' + f.at(-1).from + ': ' + f.at(-1).data);
-				e = await fetch(aiapi + encodeURI(prompt + JSON.stringify(f))).then(e => e.json());
+				e = await fetch(aiapi + encodeURI(prompt + JSON.stringify(f).slice(-1000)))
+					.then(e => e.json());
 				api('reply', { p: x.user + '/' + x.id, d: '[AI] ' + e });
 			} catch (e) {
 				console.error(e)
@@ -81,6 +82,7 @@ async function loop() {
 			a = (a.match(/(?<=")https:\/\/[^"]*?\.(jpg|png|gif|jpeg)(?=")/g) ?? []);
 			if (!a) return;
 			a.shift();
+			a = a.filter(x => !x.includes('commons.wikimedia'));
 			if (c) a = a[c]; else a = a[0];
 			console.log('\x07did ' + z + (c ? ' #' + c : ''));
 			api('reply', { p: x.user + '/' + x.id, d: '{p,' + a.replaceAll(',', '\\,') + ',300,300}' });
